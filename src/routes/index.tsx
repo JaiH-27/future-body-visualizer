@@ -8,8 +8,10 @@ import TimelineSelector from '@/components/TimelineSelector';
 import AISummaryCard from '@/components/AISummaryCard';
 import OrganInsightCard from '@/components/OrganInsightCard';
 import ChatInput from '@/components/ChatInput';
+import { toast } from 'sonner';
 import {
   type Habits,
+  type HabitLevel,
   type TimelineYear,
   type OrganRisk,
   DEFAULT_HABITS,
@@ -25,7 +27,8 @@ function FutureYou() {
   const [habits, setHabits] = useState<Habits>(DEFAULT_HABITS);
   const [years, setYears] = useState<TimelineYear>(0);
   const [selectedOrgan, setSelectedOrgan] = useState<OrganRisk | null>(null);
-  const [chatMessages, setChatMessages] = useState<string[]>([]);
+  const [chatMessages, setChatMessages] = useState<{ role: 'user' | 'ai'; text: string }[]>([]);
+  const [chatLoading, setChatLoading] = useState(false);
 
   const risks = calculateOrganRisks(habits, years);
 
@@ -33,9 +36,51 @@ function FutureYou() {
     setSelectedOrgan(organ);
   }, []);
 
-  const handleChat = useCallback((message: string) => {
-    setChatMessages((prev) => [...prev, message]);
-    // Placeholder: in production, send to AI and parse habits
+  const handleChat = useCallback(async (message: string) => {
+    setChatMessages((prev) => [...prev, { role: 'user', text: message }]);
+    setChatLoading(true);
+
+    try {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+      const resp = await fetch(`${supabaseUrl}/functions/v1/parse-habits`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${supabaseKey}`,
+        },
+        body: JSON.stringify({ message }),
+      });
+
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({ error: 'Failed' }));
+        if (resp.status === 429) toast.error('Rate limited — try again shortly.');
+        else if (resp.status === 402) toast.error('AI credits exhausted.');
+        else toast.error(err.error || 'Something went wrong.');
+        setChatLoading(false);
+        return;
+      }
+
+      const data = await resp.json();
+      if (data.habits) {
+        setHabits({
+          smoking: data.habits.smoking as HabitLevel,
+          alcohol: data.habits.alcohol as HabitLevel,
+          sleep: data.habits.sleep as HabitLevel,
+          exercise: data.habits.exercise as HabitLevel,
+          diet: data.habits.diet as HabitLevel,
+        });
+      }
+      if (data.summary) {
+        setChatMessages((prev) => [...prev, { role: 'ai', text: data.summary }]);
+      }
+    } catch (e) {
+      console.error('Chat error:', e);
+      toast.error('Failed to parse habits. Try again.');
+    } finally {
+      setChatLoading(false);
+    }
   }, []);
 
   const applyPreset = useCallback((presetKey: string) => {
@@ -66,7 +111,7 @@ function FutureYou() {
         </div>
       </header>
 
-      {/* Preset buttons */}
+      {/* Presets */}
       <div className="px-4 sm:px-6 lg:px-8 py-3 border-b border-border/30">
         <div className="max-w-7xl mx-auto flex items-center gap-2 overflow-x-auto">
           <span className="text-xs text-muted-foreground shrink-0">Presets:</span>
@@ -84,19 +129,20 @@ function FutureYou() {
         </div>
       </div>
 
-      {/* Main content */}
+      {/* Main */}
       <main className="px-4 sm:px-6 lg:px-8 py-6">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-6">
-          {/* Left: Body visualization */}
+          {/* Left: Body */}
           <motion.div
             className="lg:col-span-3 glass-card rounded-2xl p-6 glow-subtle min-h-[500px] flex flex-col"
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-2 mb-2">
               <div className="w-1.5 h-1.5 rounded-full bg-primary" />
               <h2 className="text-sm font-medium text-muted-foreground">Body Visualization</h2>
+              <span className="ml-auto text-[10px] text-muted-foreground font-mono">+{years}y projection</span>
             </div>
             <div className="flex-1 flex items-center justify-center overflow-hidden">
               <BodyVisualization risks={risks} onOrganClick={handleOrganClick} />
@@ -110,7 +156,7 @@ function FutureYou() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
           >
-            {/* Lifestyle habits */}
+            {/* Habits */}
             <div className="glass-card rounded-xl p-4 space-y-3">
               <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary" />
@@ -131,16 +177,20 @@ function FutureYou() {
             <OrganInsightCard organ={selectedOrgan} />
 
             {/* Chat */}
-            <ChatInput onSend={handleChat} />
+            <ChatInput onSend={handleChat} disabled={chatLoading} />
 
-            {/* Chat history */}
+            {/* Chat messages */}
             {chatMessages.length > 0 && (
-              <div className="glass-card rounded-xl p-3 space-y-2 max-h-32 overflow-y-auto">
+              <div className="glass-card rounded-xl p-3 space-y-2 max-h-40 overflow-y-auto">
                 {chatMessages.map((msg, i) => (
-                  <p key={i} className="text-xs text-muted-foreground">
-                    <span className="text-primary">→</span> {msg}
+                  <p key={i} className={`text-xs leading-relaxed ${msg.role === 'ai' ? 'text-primary' : 'text-muted-foreground'}`}>
+                    <span className="font-medium">{msg.role === 'user' ? '→' : '✦'}</span>{' '}
+                    {msg.text}
                   </p>
                 ))}
+                {chatLoading && (
+                  <p className="text-xs text-primary animate-pulse">✦ Analyzing your habits...</p>
+                )}
               </div>
             )}
           </motion.div>
