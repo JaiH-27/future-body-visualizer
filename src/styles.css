@@ -68,65 +68,65 @@
 }
 
 :root {
-  --radius: 1rem;
-  --background: oklch(0.98 0.005 280);
-  --foreground: oklch(0.18 0.03 280);
+  --radius: 0.75rem;
+  --background: oklch(0.965 0.003 260);
+  --foreground: oklch(0.15 0.02 260);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.03 280);
+  --card-foreground: oklch(0.15 0.02 260);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.03 280);
-  --primary: oklch(0.55 0.25 310);
+  --popover-foreground: oklch(0.15 0.02 260);
+  --primary: oklch(0.50 0.20 280);
   --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.95 0.02 280);
-  --secondary-foreground: oklch(0.35 0.04 280);
-  --muted: oklch(0.94 0.01 280);
-  --muted-foreground: oklch(0.50 0.03 280);
-  --accent: oklch(0.93 0.03 310);
-  --accent-foreground: oklch(0.40 0.15 310);
+  --secondary: oklch(0.95 0.01 260);
+  --secondary-foreground: oklch(0.35 0.03 260);
+  --muted: oklch(0.94 0.005 260);
+  --muted-foreground: oklch(0.48 0.02 260);
+  --accent: oklch(0.93 0.02 280);
+  --accent-foreground: oklch(0.40 0.12 280);
   --destructive: oklch(0.55 0.22 25);
   --destructive-foreground: oklch(0.99 0 0);
-  --border: oklch(0.90 0.02 280);
-  --input: oklch(0.93 0.01 280);
-  --ring: oklch(0.55 0.25 310);
+  --border: oklch(0.91 0.005 260);
+  --input: oklch(0.94 0.005 260);
+  --ring: oklch(0.50 0.20 280);
 
-  /* Vibrant brand colors */
-  --glow: oklch(0.60 0.28 310);
+  /* Brand — understated */
+  --glow: oklch(0.55 0.22 280);
   --glow-foreground: oklch(0.99 0 0);
-  --brand-pink: oklch(0.65 0.28 350);
-  --brand-orange: oklch(0.72 0.20 55);
-  --brand-teal: oklch(0.70 0.16 185);
-  --brand-violet: oklch(0.55 0.25 310);
+  --brand-pink: oklch(0.62 0.24 350);
+  --brand-orange: oklch(0.70 0.18 55);
+  --brand-teal: oklch(0.68 0.14 185);
+  --brand-violet: oklch(0.50 0.20 280);
 
-  /* Risk colors — vivid */
-  --risk-low: oklch(0.72 0.22 150);
-  --risk-moderate: oklch(0.78 0.18 80);
-  --risk-high: oklch(0.68 0.22 45);
-  --risk-critical: oklch(0.58 0.26 20);
+  /* Risk colors — clear & accessible */
+  --risk-low: oklch(0.65 0.20 150);
+  --risk-moderate: oklch(0.72 0.16 80);
+  --risk-high: oklch(0.65 0.20 45);
+  --risk-critical: oklch(0.55 0.24 25);
 
-  /* Severity button colors */
-  --severity-good: oklch(0.72 0.22 150);
+  /* Severity — consistent with risk */
+  --severity-good: oklch(0.65 0.20 150);
   --severity-good-foreground: oklch(0.20 0.05 150);
-  --severity-warn: oklch(0.75 0.18 70);
+  --severity-warn: oklch(0.72 0.16 70);
   --severity-warn-foreground: oklch(0.25 0.08 70);
-  --severity-bad: oklch(0.60 0.24 25);
+  --severity-bad: oklch(0.55 0.24 25);
   --severity-bad-foreground: oklch(0.99 0 0);
 
-  --surface: oklch(0.97 0.01 280);
-  --surface-foreground: oklch(0.30 0.03 280);
+  --surface: oklch(0.97 0.005 260);
+  --surface-foreground: oklch(0.30 0.02 260);
 
-  --chart-1: oklch(0.55 0.25 310);
-  --chart-2: oklch(0.72 0.22 150);
-  --chart-3: oklch(0.78 0.18 80);
-  --chart-4: oklch(0.68 0.22 45);
-  --chart-5: oklch(0.65 0.28 350);
-  --sidebar: oklch(0.97 0.015 310);
-  --sidebar-foreground: oklch(0.18 0.03 280);
-  --sidebar-primary: oklch(0.55 0.25 310);
+  --chart-1: oklch(0.50 0.20 280);
+  --chart-2: oklch(0.65 0.20 150);
+  --chart-3: oklch(0.72 0.16 80);
+  --chart-4: oklch(0.65 0.20 45);
+  --chart-5: oklch(0.62 0.24 350);
+  --sidebar: oklch(0.97 0.005 260);
+  --sidebar-foreground: oklch(0.15 0.02 260);
+  --sidebar-primary: oklch(0.50 0.20 280);
   --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.93 0.03 310);
-  --sidebar-accent-foreground: oklch(0.40 0.15 310);
-  --sidebar-border: oklch(0.90 0.02 280);
-  --sidebar-ring: oklch(0.55 0.25 310);
+  --sidebar-accent: oklch(0.93 0.02 280);
+  --sidebar-accent-foreground: oklch(0.40 0.12 280);
+  --sidebar-border: oklch(0.91 0.005 260);
+  --sidebar-ring: oklch(0.50 0.20 280);
 }
 
 @layer base {
@@ -145,64 +145,59 @@
 
 @layer utilities {
   .glow-border {
-    box-shadow: 0 0 20px -5px var(--color-glow), inset 0 1px 0 0 oklch(1 0 0 / 60%);
+    box-shadow: 0 0 12px -4px var(--color-primary), inset 0 1px 0 0 oklch(1 0 0 / 40%);
   }
 
   .glow-subtle {
     box-shadow:
-      0 1px 3px oklch(0.55 0.25 310 / 8%),
-      0 8px 30px -8px oklch(0.55 0.25 310 / 12%);
+      0 1px 2px oklch(0 0 0 / 4%),
+      0 4px 16px -4px oklch(0 0 0 / 8%);
   }
 
   .card-elevated {
     background: oklch(1 0 0);
-    border: 1px solid oklch(0.90 0.02 280);
+    border: 1px solid oklch(0.91 0.005 260);
     box-shadow:
-      0 1px 2px oklch(0 0 0 / 4%),
-      0 4px 16px oklch(0 0 0 / 6%);
+      0 1px 2px oklch(0 0 0 / 3%),
+      0 2px 8px oklch(0 0 0 / 5%);
   }
 
   .card-glass {
-    background: oklch(1 0 0 / 85%);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid oklch(0.92 0.02 280);
+    background: oklch(1 0 0 / 90%);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid oklch(0.91 0.005 260);
     box-shadow:
       0 1px 2px oklch(0 0 0 / 3%),
-      0 4px 20px -4px oklch(0 0 0 / 8%),
-      inset 0 1px 0 0 oklch(1 0 0 / 50%);
+      0 2px 8px oklch(0 0 0 / 5%);
   }
 
   .hover-scale {
     transition: transform 0.15s ease;
   }
   .hover-scale:hover {
-    transform: scale(1.03);
+    transform: scale(1.02);
   }
   .hover-scale:active {
     transform: scale(0.98);
   }
 
   .card-vibrant {
-    background: linear-gradient(135deg, oklch(1 0 0) 0%, oklch(0.97 0.02 310) 100%);
-    border: 1px solid oklch(0.88 0.04 310);
+    background: oklch(1 0 0);
+    border: 1px solid oklch(0.88 0.02 280);
     box-shadow:
-      0 1px 2px oklch(0 0 0 / 4%),
-      0 8px 24px -4px oklch(0.55 0.25 310 / 10%);
+      0 1px 2px oklch(0 0 0 / 3%),
+      0 4px 12px -2px oklch(0.50 0.20 280 / 8%);
   }
 
   .text-gradient {
-    background: linear-gradient(135deg, oklch(0.55 0.25 310), oklch(0.65 0.28 350), oklch(0.72 0.20 55));
+    background: linear-gradient(135deg, oklch(0.50 0.20 280), oklch(0.62 0.24 350));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
   .bg-mesh {
-    background:
-      radial-gradient(at 20% 20%, oklch(0.90 0.08 310 / 30%) 0%, transparent 50%),
-      radial-gradient(at 80% 80%, oklch(0.90 0.06 185 / 20%) 0%, transparent 50%),
-      radial-gradient(at 50% 50%, oklch(0.92 0.05 55 / 15%) 0%, transparent 60%),
-      var(--color-background);
+    background: var(--color-background);
   }
 }
