@@ -103,9 +103,9 @@ export function HumanBody() {
                   roughness={0.55}
                   metalness={0.02}
                   transparent
-                  opacity={0.35}
+                  opacity={0.18}
                   side={THREE.DoubleSide}
-                  transmission={0.15}
+                  transmission={0.3}
                   thickness={0.5}
                 />
               </mesh>
@@ -115,7 +115,7 @@ export function HumanBody() {
                 <meshStandardMaterial
                   color={MUSCLE}
                   transparent
-                  opacity={0.12}
+                  opacity={0.06}
                   roughness={0.7}
                   side={THREE.DoubleSide}
                 />
@@ -145,15 +145,15 @@ export function HumanBody() {
             roughness={0.5}
             metalness={0.02}
             transparent
-            opacity={0.35}
+            opacity={0.18}
             side={THREE.DoubleSide}
-            transmission={0.1}
+            transmission={0.25}
             thickness={0.5}
           />
         </mesh>
         {/* Subsurface glow */}
         <mesh geometry={headGeo} scale={0.98}>
-          <meshStandardMaterial color={SKIN_DARK} transparent opacity={0.1} roughness={0.8} side={THREE.DoubleSide} />
+          <meshStandardMaterial color={SKIN_DARK} transparent opacity={0.05} roughness={0.8} side={THREE.DoubleSide} />
         </mesh>
         {/* Eyes */}
         {[-0.065, 0.065].map((ex) => (
@@ -198,12 +198,12 @@ export function HumanBody() {
       <group position={[0, 1.54, 0]}>
         <mesh>
           <cylinderGeometry args={[0.065, 0.08, 0.1, 16, 1, false]} />
-          <meshPhysicalMaterial color={SKIN} roughness={0.55} transparent opacity={0.35} side={THREE.DoubleSide} transmission={0.1} thickness={0.3} />
+          <meshPhysicalMaterial color={SKIN} roughness={0.55} transparent opacity={0.18} side={THREE.DoubleSide} transmission={0.25} thickness={0.3} />
         </mesh>
         {/* Neck muscles */}
         <mesh>
           <cylinderGeometry args={[0.06, 0.075, 0.1, 12, 1, false]} />
-          <meshStandardMaterial color={MUSCLE} transparent opacity={0.08} roughness={0.7} side={THREE.DoubleSide} />
+          <meshStandardMaterial color={MUSCLE} transparent opacity={0.04} roughness={0.7} side={THREE.DoubleSide} />
         </mesh>
       </group>
 
@@ -216,15 +216,15 @@ export function HumanBody() {
             roughness={0.5}
             metalness={0.02}
             transparent
-            opacity={0.32}
+            opacity={0.15}
             side={THREE.DoubleSide}
-            transmission={0.15}
+            transmission={0.3}
             thickness={0.8}
           />
         </mesh>
         {/* Muscle/tissue underneath */}
         <mesh geometry={torsoGeo} scale={[0.95, 1, 0.95]}>
-          <meshStandardMaterial color={MUSCLE} transparent opacity={0.08} roughness={0.7} side={THREE.DoubleSide} />
+          <meshStandardMaterial color={MUSCLE} transparent opacity={0.04} roughness={0.7} side={THREE.DoubleSide} />
         </mesh>
 
         {/* Ribcage */}
