@@ -1,3 +1,5 @@
+import type { BloodBiomarkers } from './biomarker-types';
+
 export type HabitLevel = 0 | 1 | 2;
 
 export interface HabitConfig {
@@ -84,7 +86,7 @@ export const PRESETS: Record<string, { label: string; habits: Habits }> = {
  *
  * Note: This is for EDUCATIONAL purposes only and does not constitute medical advice.
  */
-export function calculateOrganRisks(habits: Habits, years: TimelineYear, demographics?: Demographics): OrganRisk[] {
+export function calculateOrganRisks(habits: Habits, years: TimelineYear, demographics?: Demographics, biomarkers?: BloodBiomarkers | null): OrganRisk[] {
   const timeFactor = years / 20;
 
   // Age modifier: risk increases with age (baseline 25, each decade adds ~10% risk)
@@ -98,39 +100,96 @@ export function calculateOrganRisks(habits: Habits, years: TimelineYear, demogra
   if (demographics?.height && demographics?.weight) {
     const heightM = demographics.height / 100;
     const bmi = demographics.weight / (heightM * heightM);
-    if (bmi < 18.5) bmiMod = 1.1; // underweight risk
-    else if (bmi >= 25 && bmi < 30) bmiMod = 1.15; // overweight
-    else if (bmi >= 30) bmiMod = 1.3; // obese — WHO: 2-3x higher cardiovascular risk
+    if (bmi < 18.5) bmiMod = 1.1;
+    else if (bmi >= 25 && bmi < 30) bmiMod = 1.15;
+    else if (bmi >= 30) bmiMod = 1.3;
   }
 
-  // Lung score: WHO reports smoking causes ~80% of lung cancer deaths
+  // === Biomarker boosts (add extra risk points when blood work is abnormal) ===
+  let lungBioBoost = 0;
+  let heartBioBoost = 0;
+  let liverBioBoost = 0;
+  let brainBioBoost = 0;
+  let fatBioBoost = 0;
+  let kidneyBioBoost = 0;
+
+  if (biomarkers) {
+    // Heart: cholesterol, BP, inflammation
+    if (biomarkers.totalCholesterol !== null && biomarkers.totalCholesterol >= 240) heartBioBoost += 12;
+    if (biomarkers.ldl !== null && biomarkers.ldl >= 160) heartBioBoost += 15;
+    if (biomarkers.hdl !== null && biomarkers.hdl < 40) heartBioBoost += 10;
+    if (biomarkers.triglycerides !== null && biomarkers.triglycerides >= 200) { heartBioBoost += 8; fatBioBoost += 8; }
+    if (biomarkers.systolic !== null && biomarkers.systolic >= 140) heartBioBoost += 18;
+    else if (biomarkers.systolic !== null && biomarkers.systolic >= 130) heartBioBoost += 8;
+    if (biomarkers.crp !== null && biomarkers.crp >= 3) { heartBioBoost += 8; brainBioBoost += 5; }
+
+    // Liver: ALT, AST
+    if (biomarkers.alt !== null && biomarkers.alt > 56) liverBioBoost += 18;
+    if (biomarkers.ast !== null && biomarkers.ast > 40) liverBioBoost += 12;
+
+    // Kidneys: creatinine, eGFR, BUN
+    if (biomarkers.creatinine !== null && biomarkers.creatinine > 1.3) kidneyBioBoost += 15;
+    if (biomarkers.egfr !== null) {
+      if (biomarkers.egfr < 60) kidneyBioBoost += 25;
+      else if (biomarkers.egfr < 90) kidneyBioBoost += 10;
+    }
+    if (biomarkers.bun !== null && biomarkers.bun > 20) kidneyBioBoost += 8;
+
+    // Brain: vitamin D, TSH, blood sugar (affects cognition)
+    if (biomarkers.vitaminD !== null && biomarkers.vitaminD < 20) brainBioBoost += 8;
+    if (biomarkers.tsh !== null && (biomarkers.tsh > 4 || biomarkers.tsh < 0.4)) brainBioBoost += 8;
+    if (biomarkers.hba1c !== null && biomarkers.hba1c >= 6.5) brainBioBoost += 10;
+
+    // Lungs: inflammation marker, hemoglobin (oxygen carrying)
+    if (biomarkers.hemoglobin !== null) {
+      const isMale = demographics?.sex === 'male';
+      const low = isMale ? 13.5 : 12;
+      if (biomarkers.hemoglobin < low) lungBioBoost += 10;
+    }
+
+    // Body fat / metabolic: blood sugar, triglycerides
+    if (biomarkers.fastingGlucose !== null && biomarkers.fastingGlucose >= 126) fatBioBoost += 12;
+    else if (biomarkers.fastingGlucose !== null && biomarkers.fastingGlucose >= 100) fatBioBoost += 5;
+    if (biomarkers.hba1c !== null && biomarkers.hba1c >= 6.5) fatBioBoost += 10;
+
+    // Anemia / ferritin affects energy → body fat score
+    if (biomarkers.ferritin !== null && biomarkers.ferritin < 15) fatBioBoost += 5;
+  }
+
+  // Lung score
   const lungScore = Math.min(100,
     (habits.smoking * 35 + habits.exercise * 12 + habits.diet * 5 + habits.hydration * 3) *
-    (0.3 + timeFactor * 0.7) * ageMod
+    (0.3 + timeFactor * 0.7) * ageMod + lungBioBoost
   );
 
-  // Heart score: AHA — sedentary lifestyle doubles cardiovascular disease risk
+  // Heart score
   const heartScore = Math.min(100,
     (habits.smoking * 15 + habits.exercise * 22 + habits.diet * 15 + habits.alcohol * 10 + habits.stress * 12) *
-    (0.3 + timeFactor * 0.7) * ageMod * bmiMod
+    (0.3 + timeFactor * 0.7) * ageMod * bmiMod + heartBioBoost
   );
 
-  // Liver score: CDC — heavy drinking is leading cause of liver disease
+  // Liver score
   const liverScore = Math.min(100,
     (habits.alcohol * 30 + habits.diet * 15 + habits.smoking * 5 + habits.hydration * 5) *
-    (0.3 + timeFactor * 0.7) * ageMod
+    (0.3 + timeFactor * 0.7) * ageMod + liverBioBoost
   );
 
-  // Brain score: NIH — chronic sleep deprivation linked to 33% higher dementia risk
+  // Brain score
   const brainScore = Math.min(100,
     (habits.sleep * 25 + habits.alcohol * 12 + habits.smoking * 8 + habits.stress * 18 + habits.hydration * 5) *
-    (0.3 + timeFactor * 0.7) * ageMod
+    (0.3 + timeFactor * 0.7) * ageMod + brainBioBoost
   );
 
-  // Body fat score: WHO — physical inactivity 4th leading risk factor for mortality
+  // Body fat score
   const fatScore = Math.min(100,
     (habits.exercise * 22 + habits.diet * 25 + habits.sleep * 8 + habits.stress * 8 + habits.hydration * 4) *
-    (0.3 + timeFactor * 0.7) * bmiMod
+    (0.3 + timeFactor * 0.7) * bmiMod + fatBioBoost
+  );
+
+  // Kidney score
+  const kidneyScore = Math.min(100,
+    (habits.hydration * 28 + habits.diet * 18 + habits.alcohol * 10 + habits.smoking * 5 + habits.stress * 5) *
+    (0.3 + timeFactor * 0.7) * ageMod + kidneyBioBoost
   );
 
   const toRisk = (score: number): RiskLevel =>
@@ -173,15 +232,6 @@ export function calculateOrganRisks(habits: Habits, years: TimelineYear, demogra
       : r === 'high' ? 'Elevated kidney risk. WHO: poor hydration and high-sodium diets are among the top modifiable risk factors for chronic kidney disease.'
       : 'Critical kidney risk. NIH: severe dehydration combined with poor diet can accelerate kidney disease progression significantly.',
   };
-
-  // Kidney score: NIH — dehydration and high-sodium diets are leading modifiable kidney risk factors
-  const kidneyScore = Math.min(100,
-    (habits.hydration * 28 + habits.diet * 18 + habits.alcohol * 10 + habits.smoking * 5 + habits.stress * 5) *
-    (0.3 + timeFactor * 0.7) * ageMod
-  );
-
-  // Use summaries record for kidneys
-
 
   return [
     { organ: 'brain', label: 'Brain', risk: toRisk(brainScore), score: brainScore, summary: summaries.brain(toRisk(brainScore)) },
