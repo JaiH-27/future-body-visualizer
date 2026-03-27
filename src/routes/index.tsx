@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import BodyVisualization3D from '@/components/BodyVisualization3D';
 import HabitSelector from '@/components/HabitSelector';
+import DemographicsInput from '@/components/DemographicsInput';
 import TimelineSelector from '@/components/TimelineSelector';
 import AISummaryCard from '@/components/AISummaryCard';
 import OrganInsightCard from '@/components/OrganInsightCard';
@@ -14,7 +15,9 @@ import {
   type HabitLevel,
   type TimelineYear,
   type OrganRisk,
+  type Demographics,
   DEFAULT_HABITS,
+  DEFAULT_DEMOGRAPHICS,
   PRESETS,
   calculateOrganRisks,
 } from '@/lib/health-types';
@@ -28,12 +31,13 @@ export const Route = createFileRoute('/')({
 
 function FutureYou() {
   const [habits, setHabits] = useState<Habits>(DEFAULT_HABITS);
+  const [demographics, setDemographics] = useState<Demographics>(DEFAULT_DEMOGRAPHICS);
   const [years, setYears] = useState<TimelineYear>(0);
   const [selectedOrgan, setSelectedOrgan] = useState<OrganRisk | null>(null);
   const [chatMessages, setChatMessages] = useState<{ role: 'user' | 'ai'; text: string }[]>([]);
   const [chatLoading, setChatLoading] = useState(false);
 
-  const risks = calculateOrganRisks(habits, years);
+  const risks = calculateOrganRisks(habits, years, demographics);
 
   const handleOrganClick = useCallback((organ: OrganRisk) => {
     setSelectedOrgan(organ);
@@ -51,7 +55,7 @@ function FutureYou() {
           'Authorization': `Bearer ${ANON_KEY}`,
           'apikey': ANON_KEY,
         },
-        body: JSON.stringify({ message }),
+        body: JSON.stringify({ message, demographics }),
       });
 
       if (!res.ok) {
@@ -70,18 +74,26 @@ function FutureYou() {
           sleep: data.habits.sleep as HabitLevel,
           exercise: data.habits.exercise as HabitLevel,
           diet: data.habits.diet as HabitLevel,
+          stress: (data.habits.stress ?? 0) as HabitLevel,
+          hydration: (data.habits.hydration ?? 0) as HabitLevel,
         });
       }
-      if (data.summary) {
-        setChatMessages((prev) => [...prev, { role: 'ai', text: data.summary }]);
+
+      let aiText = data.summary || 'Habits analyzed.';
+      if (data.sources && data.sources.length > 0) {
+        aiText += '\n📚 Sources: ' + data.sources.join(' · ');
       }
+      if (data.bmi_note) {
+        aiText += '\n📊 ' + data.bmi_note;
+      }
+      setChatMessages((prev) => [...prev, { role: 'ai', text: aiText }]);
     } catch (e) {
       console.error('Chat error:', e);
       toast.error('Failed to parse habits. Try again.');
     } finally {
       setChatLoading(false);
     }
-  }, []);
+  }, [demographics]);
 
   const applyPreset = useCallback((presetKey: string) => {
     const preset = PRESETS[presetKey];
@@ -132,7 +144,7 @@ function FutureYou() {
       {/* Main */}
       <main className="px-4 sm:px-6 lg:px-8 py-4">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-5">
-          {/* Left: Body */}
+          {/* Left: Body — UNTOUCHED */}
           <motion.div
             className="lg:col-span-3 card-elevated rounded-2xl p-6 glow-subtle min-h-[520px] flex flex-col"
             initial={{ opacity: 0, scale: 0.98 }}
@@ -160,6 +172,15 @@ function FutureYou() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
           >
+            {/* Demographics */}
+            <div className="card-elevated rounded-2xl p-5 space-y-3">
+              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-gradient-to-r from-brand-teal to-brand-blue" />
+                Your Profile
+              </h3>
+              <DemographicsInput demographics={demographics} onChange={setDemographics} />
+            </div>
+
             {/* Habits */}
             <div className="card-elevated rounded-2xl p-5 space-y-4">
               <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
@@ -185,18 +206,28 @@ function FutureYou() {
 
             {/* Chat messages */}
             {(chatMessages.length > 0 || chatLoading) && (
-              <div className="card-elevated rounded-2xl p-4 space-y-2 max-h-40 overflow-y-auto">
+              <div className="card-elevated rounded-2xl p-4 space-y-2 max-h-60 overflow-y-auto">
                 {chatMessages.map((msg, i) => (
-                  <p key={i} className={`text-xs leading-relaxed ${msg.role === 'ai' ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
+                  <div key={i} className={`text-xs leading-relaxed ${msg.role === 'ai' ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
                     <span className="font-semibold">{msg.role === 'user' ? '→' : '✦'}</span>{' '}
-                    {msg.text}
-                  </p>
+                    {msg.text.split('\n').map((line, j) => (
+                      <span key={j}>
+                        {line}
+                        {j < msg.text.split('\n').length - 1 && <br />}
+                      </span>
+                    ))}
+                  </div>
                 ))}
                 {chatLoading && (
-                  <p className="text-xs text-primary animate-pulse font-medium">✦ Analyzing your habits...</p>
+                  <p className="text-xs text-primary animate-pulse font-medium">✦ Analyzing your habits with verified health data...</p>
                 )}
               </div>
             )}
+
+            {/* Disclaimer */}
+            <p className="text-[10px] text-muted-foreground/60 text-center px-2">
+              ⚕️ Educational tool only. Risk projections reference WHO, CDC, AHA & NIH guidelines but do not constitute medical advice.
+            </p>
           </motion.div>
         </div>
       </main>
