@@ -156,41 +156,43 @@ export function calculateOrganRisks(habits: Habits, years: TimelineYear, demogra
     if (biomarkers.ferritin !== null && biomarkers.ferritin < 15) fatBioBoost += 5;
   }
 
+  const r2 = (n: number) => parseFloat(n.toFixed(2));
+
   // Lung score
-  const lungScore = Math.min(100,
+  const lungScore = r2(Math.min(100,
     (habits.smoking * 35 + habits.exercise * 12 + habits.diet * 5 + habits.hydration * 3) *
     (0.3 + timeFactor * 0.7) * ageMod + lungBioBoost
-  );
+  ));
 
   // Heart score
-  const heartScore = Math.min(100,
+  const heartScore = r2(Math.min(100,
     (habits.smoking * 15 + habits.exercise * 22 + habits.diet * 15 + habits.alcohol * 10 + habits.stress * 12) *
     (0.3 + timeFactor * 0.7) * ageMod * bmiMod + heartBioBoost
-  );
+  ));
 
   // Liver score
-  const liverScore = Math.min(100,
+  const liverScore = r2(Math.min(100,
     (habits.alcohol * 30 + habits.diet * 15 + habits.smoking * 5 + habits.hydration * 5) *
     (0.3 + timeFactor * 0.7) * ageMod + liverBioBoost
-  );
+  ));
 
   // Brain score
-  const brainScore = Math.min(100,
+  const brainScore = r2(Math.min(100,
     (habits.sleep * 25 + habits.alcohol * 12 + habits.smoking * 8 + habits.stress * 18 + habits.hydration * 5) *
     (0.3 + timeFactor * 0.7) * ageMod + brainBioBoost
-  );
+  ));
 
   // Body fat score
-  const fatScore = Math.min(100,
+  const fatScore = r2(Math.min(100,
     (habits.exercise * 22 + habits.diet * 25 + habits.sleep * 8 + habits.stress * 8 + habits.hydration * 4) *
     (0.3 + timeFactor * 0.7) * bmiMod + fatBioBoost
-  );
+  ));
 
   // Kidney score
-  const kidneyScore = Math.min(100,
+  const kidneyScore = r2(Math.min(100,
     (habits.hydration * 28 + habits.diet * 18 + habits.alcohol * 10 + habits.smoking * 5 + habits.stress * 5) *
     (0.3 + timeFactor * 0.7) * ageMod + kidneyBioBoost
-  );
+  ));
 
   const toRisk = (score: number): RiskLevel =>
     score < 20 ? 'low' : score < 45 ? 'moderate' : score < 70 ? 'high' : 'critical';
