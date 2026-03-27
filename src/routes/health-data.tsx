@@ -170,6 +170,52 @@ function HealthDataPage() {
             <p className="text-sm text-muted-foreground mt-1">
               Enter your blood test results (all optional) for more accurate risk projections. <span className="font-mono">{filledCount}/{totalCount} filled</span>
             </p>
+            {/* Demo presets */}
+            <div className="flex flex-wrap items-center gap-2 mt-3">
+              <span className="text-xs text-muted-foreground">Quick demo:</span>
+              <button
+                onClick={() => setBiomarkers({
+                  totalCholesterol: 195, ldl: 95, hdl: 55, triglycerides: 120,
+                  fastingGlucose: 88, hba1c: 5.2,
+                  creatinine: 0.9, bun: 14, egfr: 95,
+                  alt: 22, ast: 25,
+                  systolic: 118, diastolic: 76,
+                  hemoglobin: 15.2, wbc: 6.5,
+                  psa: 1.0, tsh: 2.1, crp: 0.8, ferritin: 85, vitaminD: 42,
+                })}
+                className="text-xs px-3 py-1.5 rounded-lg border border-severity-good/30 bg-severity-good/5 text-severity-good font-medium hover:bg-severity-good/10 transition-colors"
+              >
+                💚 Healthy Person
+              </button>
+              <button
+                onClick={() => setBiomarkers({
+                  totalCholesterol: 255, ldl: 175, hdl: 35, triglycerides: 220,
+                  fastingGlucose: 115, hba1c: 6.1,
+                  creatinine: 1.1, bun: 19, egfr: 78,
+                  alt: 48, ast: 38,
+                  systolic: 138, diastolic: 88,
+                  hemoglobin: 13.0, wbc: 8.2,
+                  psa: 2.8, tsh: 3.5, crp: 4.5, ferritin: 45, vitaminD: 22,
+                })}
+                className="text-xs px-3 py-1.5 rounded-lg border border-severity-warn/30 bg-severity-warn/5 text-severity-warn font-medium hover:bg-severity-warn/10 transition-colors"
+              >
+                ⚠️ At Risk
+              </button>
+              <button
+                onClick={() => setBiomarkers({
+                  totalCholesterol: 310, ldl: 210, hdl: 28, triglycerides: 350,
+                  fastingGlucose: 145, hba1c: 7.8,
+                  creatinine: 1.9, bun: 32, egfr: 48,
+                  alt: 85, ast: 72,
+                  systolic: 165, diastolic: 100,
+                  hemoglobin: 10.5, wbc: 12.5,
+                  psa: 6.2, tsh: 0.2, crp: 12.0, ferritin: 8, vitaminD: 12,
+                })}
+                className="text-xs px-3 py-1.5 rounded-lg border border-severity-bad/30 bg-severity-bad/5 text-severity-bad font-medium hover:bg-severity-bad/10 transition-colors"
+              >
+                🔴 High Risk
+              </button>
+            </div>
           </div>
 
           {/* Overview bar */}
