@@ -2,66 +2,35 @@ import { motion } from 'framer-motion';
 import type { OrganRisk, RiskLevel } from '@/lib/health-types';
 
 const RISK_COLORS: Record<RiskLevel, string> = {
-  low: 'var(--color-risk-low)',
-  moderate: 'var(--color-risk-moderate)',
-  high: 'var(--color-risk-high)',
-  critical: 'var(--color-risk-critical)',
+  low: 'oklch(0.72 0.19 145)',
+  moderate: 'oklch(0.80 0.18 85)',
+  high: 'oklch(0.70 0.20 55)',
+  critical: 'oklch(0.60 0.24 25)',
 };
 
-const RISK_GLOW: Record<RiskLevel, string> = {
-  low: '0 0 20px -5px var(--color-risk-low)',
-  moderate: '0 0 25px -5px var(--color-risk-moderate)',
-  high: '0 0 30px -5px var(--color-risk-high)',
-  critical: '0 0 35px -3px var(--color-risk-critical)',
-};
-
-interface OrganDotProps {
+interface OrganShapeProps {
   risk: OrganRisk;
-  cx: number;
-  cy: number;
+  children: React.ReactNode;
+  onClick?: () => void;
 }
 
-function OrganDot({ risk, cx, cy }: OrganDotProps) {
+function OrganShape({ risk, children, onClick }: OrganShapeProps) {
   const color = RISK_COLORS[risk.risk];
-  const pulseScale = risk.risk === 'critical' ? 1.6 : risk.risk === 'high' ? 1.4 : 1.2;
+  const glowIntensity = risk.risk === 'critical' ? 0.6 : risk.risk === 'high' ? 0.4 : risk.risk === 'moderate' ? 0.25 : 0.12;
+  const pulseScale = risk.risk === 'critical' ? [1, 1.08, 1] : risk.risk === 'high' ? [1, 1.05, 1] : [1, 1.02, 1];
 
   return (
-    <g>
-      {/* Pulse ring */}
-      <motion.circle
-        cx={cx}
-        cy={cy}
-        r={14}
-        fill="none"
-        stroke={color}
-        strokeWidth={1.5}
-        opacity={0.3}
-        animate={{ r: [14, 14 * pulseScale], opacity: [0.4, 0] }}
-        transition={{ duration: 2, repeat: Infinity, ease: 'easeOut' }}
-      />
-      {/* Glow */}
-      <circle cx={cx} cy={cy} r={12} fill={color} opacity={0.15} />
-      {/* Core dot */}
-      <motion.circle
-        cx={cx}
-        cy={cy}
-        r={8}
-        fill={color}
-        animate={{ scale: [1, 1.1, 1] }}
-        transition={{ duration: 2, repeat: Infinity }}
-      />
-      {/* Label */}
-      <text
-        x={cx + 18}
-        y={cy + 4}
-        fill="var(--color-foreground)"
-        fontSize={11}
-        fontFamily="var(--font-sans)"
-        opacity={0.8}
-      >
-        {risk.label}
-      </text>
-    </g>
+    <motion.g
+      onClick={onClick}
+      className="cursor-pointer"
+      animate={{ scale: pulseScale as number[] }}
+      transition={{ duration: risk.risk === 'critical' ? 1.2 : 2, repeat: Infinity, ease: 'easeInOut' }}
+      style={{ filter: `drop-shadow(0 0 ${8 + risk.score * 0.2}px ${color})` }}
+    >
+      <g opacity={glowIntensity + 0.1}>
+        {children}
+      </g>
+    </motion.g>
   );
 }
 
@@ -71,72 +40,147 @@ interface BodyVisualizationProps {
 }
 
 export default function BodyVisualization({ risks, onOrganClick }: BodyVisualizationProps) {
-  const organPositions: Record<string, { cx: number; cy: number }> = {
-    brain: { cx: 150, cy: 60 },
-    heart: { cx: 140, cy: 165 },
-    lungs: { cx: 170, cy: 145 },
-    liver: { cx: 130, cy: 210 },
-    'body-fat': { cx: 150, cy: 270 },
-  };
+  const getRisk = (id: string) => risks.find((r) => r.organ === id)!;
+  const getColor = (id: string) => RISK_COLORS[getRisk(id).risk];
 
   return (
-    <div className="relative flex items-center justify-center h-full w-full min-h-[400px]">
-      <svg viewBox="0 0 300 400" className="w-full max-w-[280px] h-auto">
-        {/* Body silhouette */}
+    <div className="relative flex items-center justify-center h-full w-full min-h-[420px]">
+      <svg viewBox="0 0 300 420" className="w-full max-w-[300px] h-auto">
         <defs>
           <linearGradient id="bodyGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="var(--color-glow)" stopOpacity="0.08" />
-            <stop offset="100%" stopColor="var(--color-glow)" stopOpacity="0.02" />
+            <stop offset="0%" stopColor="var(--color-glow)" stopOpacity="0.06" />
+            <stop offset="100%" stopColor="var(--color-glow)" stopOpacity="0.01" />
           </linearGradient>
+          <filter id="organGlow">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <radialGradient id="scanGrad">
+            <stop offset="0%" stopColor="var(--color-glow)" stopOpacity="0.08" />
+            <stop offset="100%" stopColor="var(--color-glow)" stopOpacity="0" />
+          </radialGradient>
         </defs>
 
-        {/* Head */}
-        <ellipse cx="150" cy="45" rx="28" ry="32" fill="url(#bodyGrad)" stroke="var(--color-border)" strokeWidth="1" />
-        {/* Neck */}
-        <rect x="140" y="75" width="20" height="20" rx="5" fill="url(#bodyGrad)" stroke="var(--color-border)" strokeWidth="1" />
-        {/* Torso */}
-        <path
-          d="M110 95 Q105 95 100 110 L95 200 Q93 230 110 260 L120 310 Q125 320 140 320 L160 320 Q175 320 180 310 L190 260 Q207 230 205 200 L200 110 Q195 95 190 95 Z"
-          fill="url(#bodyGrad)"
-          stroke="var(--color-border)"
-          strokeWidth="1"
-        />
-        {/* Left arm */}
-        <path d="M100 110 Q80 115 70 155 Q65 175 68 200" fill="none" stroke="var(--color-border)" strokeWidth="1.5" strokeLinecap="round" />
-        {/* Right arm */}
-        <path d="M200 110 Q220 115 230 155 Q235 175 232 200" fill="none" stroke="var(--color-border)" strokeWidth="1.5" strokeLinecap="round" />
-        {/* Left leg */}
-        <path d="M125 320 Q120 350 118 380 Q117 395 125 395" fill="none" stroke="var(--color-border)" strokeWidth="1.5" strokeLinecap="round" />
-        {/* Right leg */}
-        <path d="M175 320 Q180 350 182 380 Q183 395 175 395" fill="none" stroke="var(--color-border)" strokeWidth="1.5" strokeLinecap="round" />
+        {/* Grid lines for sci-fi feel */}
+        {[80, 140, 200, 260, 320].map((y) => (
+          <line key={y} x1="60" y1={y} x2="240" y2={y} stroke="var(--color-glow)" strokeOpacity="0.04" strokeWidth="0.5" strokeDasharray="4 4" />
+        ))}
+        {[100, 150, 200].map((x) => (
+          <line key={x} x1={x} y1="20" x2={x} y2="400" stroke="var(--color-glow)" strokeOpacity="0.04" strokeWidth="0.5" strokeDasharray="4 4" />
+        ))}
 
-        {/* Organ dots */}
-        {risks.map((risk) => {
-          const pos = organPositions[risk.organ];
-          if (!pos) return null;
+        {/* Body silhouette */}
+        <g opacity="0.5">
+          {/* Head */}
+          <ellipse cx="150" cy="48" rx="26" ry="30" fill="none" stroke="var(--color-border)" strokeWidth="1" />
+          {/* Neck */}
+          <rect x="141" y="76" width="18" height="18" rx="5" fill="none" stroke="var(--color-border)" strokeWidth="0.8" />
+          {/* Torso */}
+          <path
+            d="M112 94 Q106 94 100 112 L96 205 Q94 238 112 268 L122 318 Q127 330 142 330 L158 330 Q173 330 178 318 L188 268 Q206 238 204 205 L200 112 Q194 94 188 94 Z"
+            fill="url(#bodyGrad)"
+            stroke="var(--color-border)"
+            strokeWidth="1"
+          />
+          {/* Arms */}
+          <path d="M100 112 Q78 118 68 160 Q62 182 66 210" fill="none" stroke="var(--color-border)" strokeWidth="1" strokeLinecap="round" />
+          <path d="M200 112 Q222 118 232 160 Q238 182 234 210" fill="none" stroke="var(--color-border)" strokeWidth="1" strokeLinecap="round" />
+          {/* Legs */}
+          <path d="M126 330 Q120 360 118 392 Q117 408 126 408" fill="none" stroke="var(--color-border)" strokeWidth="1" strokeLinecap="round" />
+          <path d="M174 330 Q180 360 182 392 Q183 408 174 408" fill="none" stroke="var(--color-border)" strokeWidth="1" strokeLinecap="round" />
+        </g>
+
+        {/* === ORGANS === */}
+
+        {/* Brain */}
+        <OrganShape risk={getRisk('brain')} onClick={() => onOrganClick?.(getRisk('brain'))}>
+          <ellipse cx="150" cy="42" rx="18" ry="16" fill={getColor('brain')} opacity="0.7" />
+          <path d="M138 42 Q142 34 150 34 Q158 34 162 42" fill="none" stroke={getColor('brain')} strokeWidth="1" opacity="0.9" />
+          <line x1="150" y1="28" x2="150" y2="56" stroke={getColor('brain')} strokeWidth="0.8" opacity="0.5" />
+        </OrganShape>
+
+        {/* Lungs */}
+        <OrganShape risk={getRisk('lungs')} onClick={() => onOrganClick?.(getRisk('lungs'))}>
+          <ellipse cx="132" cy="148" rx="16" ry="22" fill={getColor('lungs')} opacity="0.5" />
+          <ellipse cx="168" cy="148" rx="16" ry="22" fill={getColor('lungs')} opacity="0.5" />
+          <ellipse cx="132" cy="148" rx="12" ry="16" fill={getColor('lungs')} opacity="0.3" />
+          <ellipse cx="168" cy="148" rx="12" ry="16" fill={getColor('lungs')} opacity="0.3" />
+        </OrganShape>
+
+        {/* Heart */}
+        <OrganShape risk={getRisk('heart')} onClick={() => onOrganClick?.(getRisk('heart'))}>
+          <path d="M145 158 Q140 148 145 142 Q150 136 155 142 Q160 148 155 158 L150 168 Z" fill={getColor('heart')} opacity="0.8" />
+          <circle cx="150" cy="153" r="6" fill={getColor('heart')} opacity="0.3" />
+        </OrganShape>
+
+        {/* Liver */}
+        <OrganShape risk={getRisk('liver')} onClick={() => onOrganClick?.(getRisk('liver'))}>
+          <ellipse cx="130" cy="210" rx="22" ry="14" fill={getColor('liver')} opacity="0.6" transform="rotate(-10 130 210)" />
+          <ellipse cx="130" cy="210" rx="16" ry="10" fill={getColor('liver')} opacity="0.3" transform="rotate(-10 130 210)" />
+        </OrganShape>
+
+        {/* Body fat / midsection */}
+        <OrganShape risk={getRisk('body-fat')} onClick={() => onOrganClick?.(getRisk('body-fat'))}>
+          <ellipse cx="150" cy="262" rx="28" ry="18" fill={getColor('body-fat')} opacity="0.35" />
+          <ellipse cx="150" cy="262" rx="20" ry="12" fill={getColor('body-fat')} opacity="0.2" />
+        </OrganShape>
+
+        {/* Organ labels */}
+        {[
+          { organ: 'brain', x: 185, y: 46 },
+          { organ: 'lungs', x: 196, y: 148 },
+          { organ: 'heart', x: 103, y: 156 },
+          { organ: 'liver', x: 96, y: 215 },
+          { organ: 'body-fat', x: 188, y: 266 },
+        ].map(({ organ, x, y }) => {
+          const r = getRisk(organ);
           return (
-            <g
-              key={risk.organ}
-              onClick={() => onOrganClick?.(risk)}
-              className="cursor-pointer"
-            >
-              <OrganDot risk={risk} cx={pos.cx} cy={pos.cy} />
+            <g key={organ}>
+              {/* Connector line */}
+              <line
+                x1={organ === 'heart' || organ === 'liver' ? x + 20 : x - 8}
+                y1={y}
+                x2={organ === 'heart' || organ === 'liver' ? x + 8 : x - 2}
+                y2={y}
+                stroke={RISK_COLORS[r.risk]}
+                strokeWidth="0.5"
+                opacity="0.4"
+              />
+              <text
+                x={x}
+                y={y + 3}
+                fill="var(--color-foreground)"
+                fontSize={9}
+                fontFamily="var(--font-sans)"
+                opacity={0.6}
+                textAnchor={organ === 'heart' || organ === 'liver' ? 'end' : 'start'}
+              >
+                {r.label}
+              </text>
             </g>
           );
         })}
       </svg>
 
-      {/* Subtle scan line effect */}
+      {/* Animated scan line */}
       <motion.div
-        className="absolute inset-0 pointer-events-none"
+        className="absolute left-0 right-0 pointer-events-none h-[2px]"
         style={{
-          background: 'linear-gradient(180deg, transparent 0%, var(--color-glow) 50%, transparent 100%)',
-          opacity: 0.03,
-          height: '30%',
+          background: 'linear-gradient(90deg, transparent 0%, var(--color-glow) 50%, transparent 100%)',
+          opacity: 0.15,
         }}
-        animate={{ top: ['-30%', '100%'] }}
-        transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
+        animate={{ top: ['0%', '100%'] }}
+        transition={{ duration: 3.5, repeat: Infinity, ease: 'linear' }}
       />
+
+      {/* Corner brackets for scanner feel */}
+      <div className="absolute top-2 left-2 w-4 h-4 border-t border-l border-primary/20 rounded-tl" />
+      <div className="absolute top-2 right-2 w-4 h-4 border-t border-r border-primary/20 rounded-tr" />
+      <div className="absolute bottom-2 left-2 w-4 h-4 border-b border-l border-primary/20 rounded-bl" />
+      <div className="absolute bottom-2 right-2 w-4 h-4 border-b border-r border-primary/20 rounded-br" />
     </div>
   );
 }
