@@ -149,7 +149,7 @@ function FutureYou() {
               </span>
             </div>
             <div className="flex-1 flex items-center justify-center overflow-hidden">
-              <BodyVisualization risks={risks} onOrganClick={handleOrganClick} />
+              <BodyVisualization3D risks={risks} onOrganClick={handleOrganClick} />
             </div>
           </motion.div>
 
