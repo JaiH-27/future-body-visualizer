@@ -56,6 +56,12 @@
   --color-brand-orange: var(--brand-orange);
   --color-brand-teal: var(--brand-teal);
   --color-brand-violet: var(--brand-violet);
+  --color-severity-good: var(--severity-good);
+  --color-severity-good-foreground: var(--severity-good-foreground);
+  --color-severity-warn: var(--severity-warn);
+  --color-severity-warn-foreground: var(--severity-warn-foreground);
+  --color-severity-bad: var(--severity-bad);
+  --color-severity-bad-foreground: var(--severity-bad-foreground);
   --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
   --font-display: 'Inter', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
@@ -96,6 +102,14 @@
   --risk-moderate: oklch(0.78 0.18 80);
   --risk-high: oklch(0.68 0.22 45);
   --risk-critical: oklch(0.58 0.26 20);
+
+  /* Severity button colors */
+  --severity-good: oklch(0.72 0.22 150);
+  --severity-good-foreground: oklch(0.20 0.05 150);
+  --severity-warn: oklch(0.75 0.18 70);
+  --severity-warn-foreground: oklch(0.25 0.08 70);
+  --severity-bad: oklch(0.60 0.24 25);
+  --severity-bad-foreground: oklch(0.99 0 0);
 
   --surface: oklch(0.97 0.01 280);
   --surface-foreground: oklch(0.30 0.03 280);
