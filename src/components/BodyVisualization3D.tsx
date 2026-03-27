@@ -181,50 +181,29 @@ function HumanBody() {
       </group>
 
       {/* Left Arm */}
-      <Limb
-        position={[-0.35, 1.36, 0]}
-        rotation={[0, 0, Math.PI / 2 + 0.15]}
-        wireColor={wc}
-        path={[
-          { rTop: 0.07, rBot: 0.065, len: 0.28 }, // upper arm
-          { rTop: 0.06, rBot: 0.05, len: 0.26 },  // forearm
-          { rTop: 0.045, rBot: 0.03, len: 0.12 },  // hand
-        ]}
-      />
+      {renderLimb([-0.35, 1.36, 0], [0, 0, Math.PI / 2 + 0.15], [
+        { rTop: 0.07, rBot: 0.065, len: 0.28 },
+        { rTop: 0.06, rBot: 0.05, len: 0.26 },
+        { rTop: 0.045, rBot: 0.03, len: 0.12 },
+      ])}
       {/* Right Arm */}
-      <Limb
-        position={[0.35, 1.36, 0]}
-        rotation={[0, 0, -(Math.PI / 2 + 0.15)]}
-        wireColor={wc}
-        path={[
-          { rTop: 0.07, rBot: 0.065, len: 0.28 },
-          { rTop: 0.06, rBot: 0.05, len: 0.26 },
-          { rTop: 0.045, rBot: 0.03, len: 0.12 },
-        ]}
-      />
-
+      {renderLimb([0.35, 1.36, 0], [0, 0, -(Math.PI / 2 + 0.15)], [
+        { rTop: 0.07, rBot: 0.065, len: 0.28 },
+        { rTop: 0.06, rBot: 0.05, len: 0.26 },
+        { rTop: 0.045, rBot: 0.03, len: 0.12 },
+      ])}
       {/* Left Leg */}
-      <Limb
-        position={[-0.13, 0.64, 0]}
-        rotation={[0, 0, 0.03]}
-        wireColor={wc}
-        path={[
-          { rTop: 0.10, rBot: 0.08, len: 0.38 }, // thigh
-          { rTop: 0.075, rBot: 0.06, len: 0.36 }, // shin
-          { rTop: 0.055, rBot: 0.05, len: 0.1 },  // ankle+foot
-        ]}
-      />
+      {renderLimb([-0.13, 0.64, 0], [0, 0, 0.03], [
+        { rTop: 0.10, rBot: 0.08, len: 0.38 },
+        { rTop: 0.075, rBot: 0.06, len: 0.36 },
+        { rTop: 0.055, rBot: 0.05, len: 0.1 },
+      ])}
       {/* Right Leg */}
-      <Limb
-        position={[0.13, 0.64, 0]}
-        rotation={[0, 0, -0.03]}
-        wireColor={wc}
-        path={[
-          { rTop: 0.10, rBot: 0.08, len: 0.38 },
-          { rTop: 0.075, rBot: 0.06, len: 0.36 },
-          { rTop: 0.055, rBot: 0.05, len: 0.1 },
-        ]}
-      />
+      {renderLimb([0.13, 0.64, 0], [0, 0, -0.03], [
+        { rTop: 0.10, rBot: 0.08, len: 0.38 },
+        { rTop: 0.075, rBot: 0.06, len: 0.36 },
+        { rTop: 0.055, rBot: 0.05, len: 0.1 },
+      ])}
 
       {/* Feet */}
       {[-0.13, 0.13].map((fx) => (
