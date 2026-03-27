@@ -173,6 +173,8 @@
   --sidebar-border: oklch(0.25 0.01 260);
   --sidebar-ring: oklch(0.65 0.22 280);
 }
+
+@layer base {
   * {
     border-color: var(--color-border);
   }
@@ -245,16 +247,10 @@
   }
 }
 
-/* Rainbow aura — must be outside @layer for @property support */
-@property --rainbow-angle {
-  syntax: "<angle>";
-  initial-value: 0deg;
-  inherits: false;
-}
-
+/* Rainbow aura — CSS animation for rotating gradient border */
 @keyframes rainbow-rotate {
-  0% { --rainbow-angle: 0deg; }
-  100% { --rainbow-angle: 360deg; }
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .rainbow-aura {
@@ -268,7 +264,7 @@
   inset: -2px;
   border-radius: inherit;
   background: conic-gradient(
-    from var(--rainbow-angle, 0deg),
+    from 0deg,
     oklch(0.70 0.25 330),
     oklch(0.70 0.22 280),
     oklch(0.72 0.18 220),
@@ -288,7 +284,7 @@
   inset: -8px;
   border-radius: inherit;
   background: conic-gradient(
-    from var(--rainbow-angle, 0deg),
+    from 0deg,
     oklch(0.70 0.25 330 / 40%),
     oklch(0.70 0.22 280 / 40%),
     oklch(0.72 0.18 220 / 40%),
