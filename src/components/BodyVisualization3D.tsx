@@ -103,9 +103,7 @@ function Particles({ count = 40 }: { count?: number }) {
     <points ref={ref} geometry={geo}>
       <pointsMaterial size={0.008} color="#c4b5fd" transparent opacity={0.4} sizeAttenuation />
     </points>
-  );
-    </points>
-  );
+}
 }
 
 /* ── Human Body ── */
