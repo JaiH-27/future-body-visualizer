@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
-import { useServerFn } from '@tanstack/react-start';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import BodyVisualization3D from '@/components/BodyVisualization3D';
@@ -10,7 +9,6 @@ import AISummaryCard from '@/components/AISummaryCard';
 import OrganInsightCard from '@/components/OrganInsightCard';
 import ChatInput from '@/components/ChatInput';
 import { toast } from 'sonner';
-import { parseHabits } from '@/lib/parse-habits';
 import {
   type Habits,
   type HabitLevel,
@@ -20,6 +18,9 @@ import {
   PRESETS,
   calculateOrganRisks,
 } from '@/lib/health-types';
+
+const SUPABASE_URL = 'https://tglfrgxkinkoxbocadum.supabase.co';
+const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRnbGZyZ3hraW5rb3hib2NhZHVtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MDg4MjEsImV4cCI6MjA5MDE4NDgyMX0.l6qzeNnFKwKt6D1pj6qQvQ4jmPg6f2lZ9WFFGX6ZJck';
 
 export const Route = createFileRoute('/')({
   component: FutureYou,
@@ -33,7 +34,6 @@ function FutureYou() {
   const [chatLoading, setChatLoading] = useState(false);
 
   const risks = calculateOrganRisks(habits, years);
-  const parseHabitsFn = useServerFn(parseHabits);
 
   const handleOrganClick = useCallback((organ: OrganRisk) => {
     setSelectedOrgan(organ);
@@ -44,7 +44,24 @@ function FutureYou() {
     setChatLoading(true);
 
     try {
-      const data = await parseHabitsFn({ data: { message } });
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/parse-habits`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${ANON_KEY}`,
+          'apikey': ANON_KEY,
+        },
+        body: JSON.stringify({ message }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        toast.error(errData.error || 'Something went wrong parsing your habits.');
+        setChatLoading(false);
+        return;
+      }
+
+      const data = await res.json();
 
       if (data.habits) {
         setHabits({
