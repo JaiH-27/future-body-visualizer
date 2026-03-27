@@ -69,7 +69,7 @@ export default function KPIStrip({ risks, onOrganHover, hoveredOrgan }: KPIStrip
               <span className="text-xs">{ORGAN_ICONS[risk.organ]}</span>
               {risk.label}
             </p>
-            <p className={`text-lg font-bold font-mono ${color}`}>{healthVal}</p>
+            <p className={`text-lg font-bold font-mono ${color}`}>{healthVal.toFixed(2)}</p>
             <MiniSparkline value={risk.score} />
           </motion.div>
         );
