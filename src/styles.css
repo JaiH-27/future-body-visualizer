@@ -162,6 +162,27 @@
       0 4px 16px oklch(0 0 0 / 6%);
   }
 
+  .card-glass {
+    background: oklch(1 0 0 / 85%);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid oklch(0.92 0.02 280);
+    box-shadow:
+      0 1px 2px oklch(0 0 0 / 3%),
+      0 4px 20px -4px oklch(0 0 0 / 8%),
+      inset 0 1px 0 0 oklch(1 0 0 / 50%);
+  }
+
+  .hover-scale {
+    transition: transform 0.15s ease;
+  }
+  .hover-scale:hover {
+    transform: scale(1.03);
+  }
+  .hover-scale:active {
+    transform: scale(0.98);
+  }
+
   .card-vibrant {
     background: linear-gradient(135deg, oklch(1 0 0) 0%, oklch(0.97 0.02 310) 100%);
     border: 1px solid oklch(0.88 0.04 310);
