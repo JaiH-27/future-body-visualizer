@@ -41,10 +41,34 @@ function FutureYou() {
     setChatLoading(true);
 
     try {
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { data, error } = await supabase.functions.invoke('parse-habits', {
-        body: { message },
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      
+      if (!supabaseUrl || !anonKey) {
+        toast.error('Configuration error. Please try again.');
+        setChatLoading(false);
+        return;
+      }
+
+      const res = await fetch(`${supabaseUrl}/functions/v1/parse-habits`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${anonKey}`,
+          'apikey': anonKey,
+        },
+        body: JSON.stringify({ message }),
       });
+      
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        toast.error(errData.error || 'Something went wrong parsing your habits.');
+        setChatLoading(false);
+        return;
+      }
+      
+      const data = await res.json();
+      const error = null;
 
       if (error) {
         toast.error('Something went wrong parsing your habits.');
