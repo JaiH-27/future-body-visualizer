@@ -22,6 +22,9 @@ const buttonVariants = cva(
         glow: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-md shadow-primary/20 transition-all",
         preset: "bg-card text-foreground border border-border hover:bg-accent hover:border-primary/30 shadow-sm transition-all rounded-xl",
         pill: "rounded-full bg-muted text-muted-foreground hover:bg-accent data-[active=true]:bg-primary data-[active=true]:text-primary-foreground data-[active=true]:shadow-md data-[active=true]:shadow-primary/20 transition-all",
+        "pill-good": "rounded-full bg-muted text-muted-foreground hover:bg-severity-good/20 data-[active=true]:bg-severity-good data-[active=true]:text-severity-good-foreground data-[active=true]:shadow-md data-[active=true]:shadow-severity-good/25 transition-all",
+        "pill-warn": "rounded-full bg-muted text-muted-foreground hover:bg-severity-warn/20 data-[active=true]:bg-severity-warn data-[active=true]:text-severity-warn-foreground data-[active=true]:shadow-md data-[active=true]:shadow-severity-warn/25 transition-all",
+        "pill-bad": "rounded-full bg-muted text-muted-foreground hover:bg-severity-bad/20 data-[active=true]:bg-severity-bad data-[active=true]:text-severity-bad-foreground data-[active=true]:shadow-md data-[active=true]:shadow-severity-bad/25 transition-all",
       },
       size: {
         default: "h-9 px-4 py-2",
