@@ -41,14 +41,12 @@ function FutureYou() {
     setChatLoading(true);
 
     try {
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-      
-      if (!supabaseUrl || !anonKey) {
-        toast.error('Configuration error. Please try again.');
-        setChatLoading(false);
-        return;
-      }
+      const supabaseUrl = typeof window !== 'undefined' 
+        ? (import.meta.env.VITE_SUPABASE_URL || 'https://tglfrgxkinkoxbocadum.supabase.co')
+        : 'https://tglfrgxkinkoxbocadum.supabase.co';
+      const anonKey = typeof window !== 'undefined'
+        ? (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRnbGZyZ3hraW5rb3hib2NhZHVtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MDg4MjEsImV4cCI6MjA5MDE4NDgyMX0.l6qzeNnFKwKt6D1pj6qQvQ4jmPg6f2lZ9WFFGX6ZJck')
+        : '';
 
       const res = await fetch(`${supabaseUrl}/functions/v1/parse-habits`, {
         method: 'POST',
