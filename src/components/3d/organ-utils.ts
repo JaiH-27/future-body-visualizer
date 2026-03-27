@@ -25,8 +25,8 @@ export const RISK_LABELS: Record<RiskLevel, string> = {
 };
 
 export function getEmissiveIntensity(risk: RiskLevel, hovered: boolean): number {
-  const base = risk === 'critical' ? 2.5 : risk === 'high' ? 1.8 : risk === 'moderate' ? 1.2 : 0.5;
-  return hovered ? base * 1.6 : base;
+  const base = risk === 'critical' ? 4.0 : risk === 'high' ? 3.0 : risk === 'moderate' ? 2.0 : 1.2;
+  return hovered ? base * 1.8 : base;
 }
 
 export function getPulseAmount(risk: RiskLevel): number {
