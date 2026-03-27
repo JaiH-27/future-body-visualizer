@@ -132,7 +132,12 @@ function DiseaseCard({ disease, index }: { disease: DiseaseRisk; index: number }
 }
 
 function HealthDataPage() {
-  const [biomarkers, setBiomarkers] = useState<BloodBiomarkers>(DEFAULT_BIOMARKERS);
+  const [biomarkers, setBiomarkers] = useState<BloodBiomarkers>(() => {
+    try {
+      const saved = localStorage.getItem('health-biomarkers');
+      return saved ? JSON.parse(saved) : DEFAULT_BIOMARKERS;
+    } catch { return DEFAULT_BIOMARKERS; }
+  });
   const [habits] = useState<Habits>(DEFAULT_HABITS);
   const [demographics, setDemographics] = useState<Demographics>(DEFAULT_DEMOGRAPHICS);
 
