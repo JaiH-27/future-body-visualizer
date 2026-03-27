@@ -52,11 +52,12 @@ function Scene({ risks, onOrganClick }: { risks: OrganRisk[]; onOrganClick?: (or
 
   return (
     <>
-      <ambientLight intensity={0.45} />
-      <directionalLight position={[5, 5, 5]} intensity={0.55} />
-      <directionalLight position={[-3, 4, -2]} intensity={0.25} color="#c4b5fd" />
-      <pointLight position={[0, 2.5, 3]} intensity={0.4} color="#f0abfc" />
-      <pointLight position={[0, -0.5, 2]} intensity={0.15} color="#67e8f9" />
+      <ambientLight intensity={0.5} />
+      <directionalLight position={[5, 5, 5]} intensity={0.7} color="#fff5ee" />
+      <directionalLight position={[-3, 4, -2]} intensity={0.3} color="#ffe4d4" />
+      <pointLight position={[0, 2.5, 3]} intensity={0.5} color="#ffd4c4" />
+      <pointLight position={[0, -0.5, 2]} intensity={0.2} color="#e8d8f0" />
+      <pointLight position={[2, 1, -2]} intensity={0.15} color="#ffeedd" />
 
       <Float speed={0.3} rotationIntensity={0.008} floatIntensity={0.06}>
         <group position={[0, -0.8, 0]}>
