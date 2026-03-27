@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import BodyVisualization from '@/components/BodyVisualization';
+import BodyVisualization3D from '@/components/BodyVisualization3D';
 import HabitSelector from '@/components/HabitSelector';
 import TimelineSelector from '@/components/TimelineSelector';
 import AISummaryCard from '@/components/AISummaryCard';
@@ -149,7 +149,7 @@ function FutureYou() {
               </span>
             </div>
             <div className="flex-1 flex items-center justify-center overflow-hidden">
-              <BodyVisualization risks={risks} onOrganClick={handleOrganClick} />
+              <BodyVisualization3D risks={risks} onOrganClick={handleOrganClick} />
             </div>
           </motion.div>
 
