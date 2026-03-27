@@ -1,6 +1,8 @@
 import { HABIT_CONFIGS, type Habits, type HabitLevel } from '@/lib/health-types';
 import { Button } from '@/components/ui/button';
 
+const LEVEL_VARIANTS = ['pill-good', 'pill-warn', 'pill-bad'] as const;
+
 interface HabitSelectorProps {
   habits: Habits;
   onChange: (habits: Habits) => void;
@@ -23,7 +25,7 @@ export default function HabitSelector({ habits, onChange }: HabitSelectorProps) 
             {config.levels.map((label, i) => (
               <Button
                 key={i}
-                variant="pill"
+                variant={LEVEL_VARIANTS[i]}
                 size="sm"
                 data-active={habits[config.id as keyof Habits] === i}
                 onClick={() => setHabit(config.id, i as HabitLevel)}
