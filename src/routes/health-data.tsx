@@ -379,7 +379,7 @@ function HealthDataPage() {
                             <div>
                               <span className="text-xs font-semibold text-foreground">{d.name}</span>
                               <span className={`text-[10px] ml-1.5 font-mono ${d.risk === 'low' ? 'text-severity-good' : d.risk === 'moderate' ? 'text-severity-warn' : 'text-severity-bad'}`}>
-                                ({d.score}% risk)
+                                ({d.score.toFixed(2)}% risk)
                               </span>
                               <p className="text-[10px] text-muted-foreground mt-0.5">{d.description}</p>
                             </div>
