@@ -135,7 +135,7 @@ export default function BodyVisualization({ risks, onOrganClick }: BodyVisualiza
                 fontSize={9}
                 fontWeight="500"
                 fontFamily="var(--font-sans)"
-                textAnchor={align}
+                textAnchor={align as 'start' | 'end'}
               >
                 {r.label}
               </text>
