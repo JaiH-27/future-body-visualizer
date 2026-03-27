@@ -40,7 +40,7 @@ function FutureYou() {
     setChatMessages((prev) => [...prev, { role: 'user', text: message }]);
     setChatLoading(true);
 
-    try {
+      const { supabase } = await import('@/integrations/supabase/client');
       const { data, error } = await supabase.functions.invoke('parse-habits', {
         body: { message },
       });
