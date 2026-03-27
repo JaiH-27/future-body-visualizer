@@ -1,77 +1,15 @@
-import { useRef, useState, useMemo } from 'react';
+import { useRef, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Float, Html } from '@react-three/drei';
+import { OrbitControls, Float } from '@react-three/drei';
 import * as THREE from 'three';
-import type { OrganRisk, RiskLevel } from '@/lib/health-types';
-
-const RISK_COLORS: Record<RiskLevel, string> = {
-  low: '#4ade80',
-  moderate: '#facc15',
-  high: '#f97316',
-  critical: '#ef4444',
-};
-
-const ORGAN_LABELS: Record<string, string> = {
-  brain: 'Brain',
-  heart: 'Heart',
-  lungs: 'Lungs',
-  liver: 'Liver',
-  kidneys: 'Kidneys',
-  'body-fat': 'Body Comp',
-};
-
-const RISK_LABELS: Record<RiskLevel, string> = {
-  low: 'Healthy',
-  moderate: 'Mild strain',
-  high: 'At risk',
-  critical: 'Critical',
-};
-
-function createLatheBody(profile: [number, number][], segments = 32): THREE.LatheGeometry {
-  const points = profile.map(([r, y]) => new THREE.Vector2(r, y));
-  return new THREE.LatheGeometry(points, segments);
-}
-
-function createTorsoGeometry(
-  slices: { y: number; rx: number; rz: number; zOff?: number }[],
-  radialSegs = 24,
-): THREE.BufferGeometry {
-  const positions: number[] = [];
-  const normals: number[] = [];
-  const indices: number[] = [];
-
-  for (let s = 0; s < slices.length; s++) {
-    const { y, rx, rz, zOff = 0 } = slices[s];
-    for (let r = 0; r <= radialSegs; r++) {
-      const theta = (r / radialSegs) * Math.PI * 2;
-      const cos = Math.cos(theta);
-      const sin = Math.sin(theta);
-      positions.push(cos * rx, y, sin * rz + zOff);
-      const nx = cos / rx;
-      const nz = sin / rz;
-      const len = Math.sqrt(nx * nx + nz * nz) || 1;
-      normals.push(nx / len, 0, nz / len);
-    }
-  }
-
-  const vertsPerSlice = radialSegs + 1;
-  for (let s = 0; s < slices.length - 1; s++) {
-    for (let r = 0; r < radialSegs; r++) {
-      const a = s * vertsPerSlice + r;
-      const b = a + 1;
-      const c = a + vertsPerSlice;
-      const d = c + 1;
-      indices.push(a, c, b, b, c, d);
-    }
-  }
-
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-  geo.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
-  geo.setIndex(indices);
-  geo.computeVertexNormals();
-  return geo;
-}
+import type { OrganRisk } from '@/lib/health-types';
+import { createLatheBody, createTorsoGeometry } from './3d/organ-utils';
+import { BrainOrgan } from './3d/BrainOrgan';
+import { HeartOrgan } from './3d/HeartOrgan';
+import { LungOrgan } from './3d/LungOrgan';
+import { LiverOrgan } from './3d/LiverOrgan';
+import { KidneyOrgan } from './3d/KidneyOrgan';
+import { BodyFatOrgan } from './3d/BodyFatOrgan';
 
 /* ── Floating Particles ── */
 function Particles({ count = 40 }: { count?: number }) {
@@ -106,7 +44,7 @@ function Particles({ count = 40 }: { count?: number }) {
   );
 }
 
-/* ── Human Body ── */
+/* ── Human Body (wireframe shell) ── */
 function HumanBody() {
   const wc = '#9b8ec7';
 
@@ -136,7 +74,6 @@ function HumanBody() {
     { y: -0.44, rx: 0.15, rz: 0.08 },
   ], 24), []);
 
-  /* Breathing animation for torso */
   const torsoRef = useRef<THREE.Group>(null);
   useFrame((state) => {
     if (!torsoRef.current) return;
@@ -238,147 +175,6 @@ function HumanBody() {
   );
 }
 
-/* ── Organ Tooltip ── */
-function OrganTooltip({ risk, visible }: { risk: OrganRisk; visible: boolean }) {
-  if (!visible) return null;
-  return (
-    <Html center distanceFactor={3} style={{ pointerEvents: 'none' }}>
-      <div
-        className="px-3 py-2 rounded-xl text-[11px] font-medium whitespace-nowrap shadow-lg border backdrop-blur-sm"
-        style={{
-          background: 'rgba(255,255,255,0.92)',
-          borderColor: RISK_COLORS[risk.risk],
-          color: '#1a1a2e',
-          transform: 'translateY(-24px)',
-        }}
-      >
-        <span style={{ color: RISK_COLORS[risk.risk] }}>●</span>{' '}
-        {ORGAN_LABELS[risk.organ] || risk.label}: {RISK_LABELS[risk.risk]}
-        <span className="ml-1.5 opacity-60">{risk.score.toFixed(2)}%</span>
-      </div>
-    </Html>
-  );
-}
-
-/* ── Organ: Lungs ── */
-function LungShape({ risk, side, onClick }: { risk: OrganRisk; side: 'left' | 'right'; onClick?: (r: OrganRisk) => void }) {
-  const x = side === 'left' ? -0.15 : 0.15;
-  const c = RISK_COLORS[risk.risk];
-  const bi = risk.risk === 'critical' ? 2.5 : risk.risk === 'high' ? 1.8 : risk.risk === 'moderate' ? 1.2 : 0.5;
-  const [h, setH] = useState(false);
-  const i = h ? bi * 1.6 : bi;
-  const ref = useRef<THREE.Group>(null);
-  useFrame((s) => {
-    if (!ref.current) return;
-    // Breathing animation
-    const breathe = 1 + Math.sin(s.clock.elapsedTime * 0.8) * 0.04;
-    ref.current.scale.setScalar(breathe);
-  });
-
-  return (
-    <group ref={ref} position={[x, 1.22, 0.02]}
-      onClick={(e) => { e.stopPropagation(); onClick?.(risk); }}
-      onPointerOver={(e) => { e.stopPropagation(); setH(true); document.body.style.cursor = 'pointer'; }}
-      onPointerOut={() => { setH(false); document.body.style.cursor = 'default'; }}>
-      {side === 'left' && <OrganTooltip risk={risk} visible={h} />}
-      <mesh scale={[0.10, 0.16, 0.08]}>
-        <sphereGeometry args={[1, 16, 16]} />
-        <meshStandardMaterial color={c} emissive={c} emissiveIntensity={i} transparent opacity={h ? 0.75 : 0.6} roughness={0.35} />
-      </mesh>
-      <mesh position={[0, 0.08, 0.01]} scale={[0.07, 0.09, 0.06]}>
-        <sphereGeometry args={[1, 12, 12]} />
-        <meshStandardMaterial color={c} emissive={c} emissiveIntensity={i * 0.7} transparent opacity={h ? 0.6 : 0.45} roughness={0.4} />
-      </mesh>
-      {/* Outer glow shell */}
-      <mesh scale={[0.13, 0.19, 0.11]}>
-        <sphereGeometry args={[1, 12, 12]} />
-        <meshBasicMaterial color={c} transparent opacity={h ? 0.15 : 0.06} />
-      </mesh>
-    </group>
-  );
-}
-
-/* ── Organ: Heart ── */
-function HeartShape({ risk, onClick }: { risk: OrganRisk; onClick?: (r: OrganRisk) => void }) {
-  const c = RISK_COLORS[risk.risk];
-  const bi = risk.risk === 'critical' ? 2.5 : risk.risk === 'high' ? 1.8 : risk.risk === 'moderate' ? 1.2 : 0.5;
-  const [h, setH] = useState(false);
-  const i = h ? bi * 1.6 : bi;
-  const ref = useRef<THREE.Group>(null);
-  useFrame((s) => {
-    if (!ref.current) return;
-    const bpm = risk.risk === 'critical' ? 5 : risk.risk === 'high' ? 4 : 3;
-    ref.current.scale.setScalar(1 + Math.sin(s.clock.elapsedTime * bpm) * 0.06 * (risk.risk === 'critical' ? 2 : 1));
-  });
-
-  return (
-    <group ref={ref} position={[-0.05, 1.15, 0.1]}
-      onClick={(e) => { e.stopPropagation(); onClick?.(risk); }}
-      onPointerOver={(e) => { e.stopPropagation(); setH(true); document.body.style.cursor = 'pointer'; }}
-      onPointerOut={() => { setH(false); document.body.style.cursor = 'default'; }}>
-      <OrganTooltip risk={risk} visible={h} />
-      <mesh position={[-0.025, 0.015, 0]} scale={[0.04, 0.05, 0.035]}>
-        <sphereGeometry args={[1, 14, 14]} />
-        <meshStandardMaterial color={c} emissive={c} emissiveIntensity={i} transparent opacity={0.85} roughness={0.3} />
-      </mesh>
-      <mesh position={[0.025, 0.015, 0]} scale={[0.04, 0.05, 0.035]}>
-        <sphereGeometry args={[1, 14, 14]} />
-        <meshStandardMaterial color={c} emissive={c} emissiveIntensity={i} transparent opacity={0.85} roughness={0.3} />
-      </mesh>
-      <mesh position={[0, -0.03, 0]} scale={[0.03, 0.04, 0.028]} rotation={[0, 0, Math.PI]}>
-        <coneGeometry args={[1, 1.5, 12]} />
-        <meshStandardMaterial color={c} emissive={c} emissiveIntensity={i * 0.9} transparent opacity={0.8} roughness={0.3} />
-      </mesh>
-      {/* Glow halo */}
-      <mesh scale={[0.08, 0.08, 0.06]}>
-        <sphereGeometry args={[1, 10, 10]} />
-        <meshBasicMaterial color={c} transparent opacity={h ? 0.18 : 0.08} />
-      </mesh>
-    </group>
-  );
-}
-
-/* ── Generic glowing organ ── */
-function GlowOrgan({ risk, position, scale, rotation, onClick, showTooltip = true }: {
-  risk: OrganRisk; position: [number, number, number]; scale: [number, number, number];
-  rotation?: [number, number, number]; onClick?: (r: OrganRisk) => void; showTooltip?: boolean;
-}) {
-  const c = RISK_COLORS[risk.risk];
-  const bi = risk.risk === 'critical' ? 2.5 : risk.risk === 'high' ? 1.8 : risk.risk === 'moderate' ? 1.2 : 0.5;
-  const [h, setH] = useState(false);
-  const i = h ? bi * 1.6 : bi;
-  const ref = useRef<THREE.Mesh>(null);
-  const glowRef = useRef<THREE.Mesh>(null);
-  useFrame((s) => {
-    if (!ref.current) return;
-    const p = risk.risk === 'critical' ? 0.08 : risk.risk === 'high' ? 0.04 : 0.02;
-    const sc = 1 + Math.sin(s.clock.elapsedTime * 1.5) * p;
-    ref.current.scale.set(scale[0] * sc, scale[1] * sc, scale[2] * sc);
-    if (glowRef.current) {
-      const gsc = 1 + Math.sin(s.clock.elapsedTime * 1.5 + Math.PI) * p * 1.5;
-      glowRef.current.scale.set(scale[0] * 1.4 * gsc, scale[1] * 1.4 * gsc, scale[2] * 1.4 * gsc);
-    }
-  });
-
-  return (
-    <group>
-      <mesh ref={ref} position={position} rotation={rotation as unknown as THREE.Euler} scale={scale}
-        onClick={(e) => { e.stopPropagation(); onClick?.(risk); }}
-        onPointerOver={(e) => { e.stopPropagation(); setH(true); document.body.style.cursor = 'pointer'; }}
-        onPointerOut={() => { setH(false); document.body.style.cursor = 'default'; }}>
-        {showTooltip && <OrganTooltip risk={risk} visible={h} />}
-        <sphereGeometry args={[1, 18, 18]} />
-        <meshStandardMaterial color={c} emissive={c} emissiveIntensity={i} transparent opacity={h ? 0.85 : 0.6} roughness={0.35} />
-      </mesh>
-      {/* Outer glow */}
-      <mesh ref={glowRef} position={position} rotation={rotation as unknown as THREE.Euler} scale={scale.map(s => s * 1.4) as [number, number, number]}>
-        <sphereGeometry args={[1, 12, 12]} />
-        <meshBasicMaterial color={c} transparent opacity={h ? 0.15 : 0.05} />
-      </mesh>
-    </group>
-  );
-}
-
 /* ── Scene ── */
 function Scene({ risks, onOrganClick }: { risks: OrganRisk[]; onOrganClick?: (organ: OrganRisk) => void }) {
   const get = (id: string) => risks.find((r) => r.organ === id)!;
@@ -396,14 +192,14 @@ function Scene({ risks, onOrganClick }: { risks: OrganRisk[]; onOrganClick?: (or
           <HumanBody />
           <Particles count={50} />
 
-          <GlowOrgan risk={get('brain')} position={[0, 1.78, 0]} scale={[0.12, 0.14, 0.13]} onClick={onOrganClick} />
-          <LungShape risk={get('lungs')} side="left" onClick={onOrganClick} />
-          <LungShape risk={get('lungs')} side="right" onClick={onOrganClick} />
-          <HeartShape risk={get('heart')} onClick={onOrganClick} />
-          <GlowOrgan risk={get('liver')} position={[0.12, 0.98, 0.06]} scale={[0.10, 0.06, 0.055]} rotation={[0, 0, -0.3]} onClick={onOrganClick} />
-          <GlowOrgan risk={get('kidneys')} position={[-0.14, 0.92, -0.04]} scale={[0.045, 0.06, 0.035]} onClick={onOrganClick} />
-          <GlowOrgan risk={get('kidneys')} position={[0.14, 0.92, -0.04]} scale={[0.045, 0.06, 0.035]} showTooltip={false} onClick={onOrganClick} />
-          <GlowOrgan risk={get('body-fat')} position={[0, 0.82, 0.1]} scale={[0.18, 0.09, 0.09]} onClick={onOrganClick} />
+          <BrainOrgan risk={get('brain')} onClick={onOrganClick} />
+          <LungOrgan risk={get('lungs')} side="left" onClick={onOrganClick} />
+          <LungOrgan risk={get('lungs')} side="right" onClick={onOrganClick} />
+          <HeartOrgan risk={get('heart')} onClick={onOrganClick} />
+          <LiverOrgan risk={get('liver')} onClick={onOrganClick} />
+          <KidneyOrgan risk={get('kidneys')} side="left" onClick={onOrganClick} />
+          <KidneyOrgan risk={get('kidneys')} side="right" onClick={onOrganClick} />
+          <BodyFatOrgan risk={get('body-fat')} onClick={onOrganClick} />
         </group>
       </Float>
 
