@@ -216,29 +216,30 @@ export function HumanBody() {
             roughness={0.5}
             metalness={0.02}
             transparent
-            opacity={0.15}
+            opacity={0.08}
             side={THREE.DoubleSide}
-            transmission={0.3}
+            transmission={0.5}
             thickness={0.8}
+            depthWrite={false}
           />
         </mesh>
         {/* Muscle/tissue underneath */}
         <mesh geometry={torsoGeo} scale={[0.95, 1, 0.95]}>
-          <meshStandardMaterial color={MUSCLE} transparent opacity={0.04} roughness={0.7} side={THREE.DoubleSide} />
+          <meshStandardMaterial color={MUSCLE} transparent opacity={0.02} roughness={0.7} side={THREE.DoubleSide} depthWrite={false} />
         </mesh>
 
         {/* Ribcage */}
         {ribCurves.map((curve, i) => (
           <mesh key={`rib-${i}`}>
             <tubeGeometry args={[curve, 16, 0.004, 5, false]} />
-            <meshStandardMaterial color="#e8ddd4" transparent opacity={0.15} roughness={0.4} />
+            <meshStandardMaterial color="#e8ddd4" transparent opacity={0.08} roughness={0.4} depthWrite={false} />
           </mesh>
         ))}
 
         {/* Spine */}
         <mesh>
           <tubeGeometry args={[spineCurve, 20, 0.008, 6, false]} />
-          <meshStandardMaterial color="#e8ddd4" transparent opacity={0.18} roughness={0.4} />
+          <meshStandardMaterial color="#e8ddd4" transparent opacity={0.1} roughness={0.4} depthWrite={false} />
         </mesh>
 
         {/* Sternum */}
@@ -252,14 +253,14 @@ export function HumanBody() {
             ]),
             10, 0.005, 5, false
           ]} />
-          <meshStandardMaterial color="#e8ddd4" transparent opacity={0.15} roughness={0.4} />
+          <meshStandardMaterial color="#e8ddd4" transparent opacity={0.08} roughness={0.4} depthWrite={false} />
         </mesh>
 
         {/* Pectoral definition */}
         {[-0.1, 0.1].map((px) => (
           <mesh key={`pec-${px}`} position={[px, 0.28, 0.12]} scale={[0.12, 0.08, 0.04]}>
             <sphereGeometry args={[1, 10, 8]} />
-            <meshStandardMaterial color={MUSCLE} transparent opacity={0.06} roughness={0.6} />
+            <meshStandardMaterial color={MUSCLE} transparent opacity={0.03} roughness={0.6} depthWrite={false} />
           </mesh>
         ))}
 
@@ -269,7 +270,7 @@ export function HumanBody() {
             {[-0.05, 0.05].map((ax) => (
               <mesh key={`ab-${ax}-${ay}`} position={[ax, ay, 0.12]} scale={[0.04, 0.03, 0.02]}>
                 <sphereGeometry args={[1, 6, 6]} />
-                <meshStandardMaterial color={MUSCLE} transparent opacity={0.05} roughness={0.7} />
+                <meshStandardMaterial color={MUSCLE} transparent opacity={0.025} roughness={0.7} depthWrite={false} />
               </mesh>
             ))}
           </group>

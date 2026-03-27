@@ -20,21 +20,21 @@ export function HeartOrgan({ risk, onClick }: { risk: OrganRisk; onClick?: (r: O
   });
 
   return (
-    <group ref={ref} position={[-0.05, 1.15, 0.08]}
+    <group ref={ref} position={[-0.02, 1.15, 0.16]}
       onClick={(e) => { e.stopPropagation(); onClick?.(risk); }}
       onPointerOver={(e) => { e.stopPropagation(); setH(true); document.body.style.cursor = 'pointer'; }}
       onPointerOut={() => { setH(false); document.body.style.cursor = 'default'; }}>
       <OrganTooltip risk={risk} visible={h} />
       {/* Main heart mesh */}
-      <mesh geometry={geo} scale={[0.055, 0.05, 0.045]} rotation={[Math.PI, 0, 0]}>
+      <mesh geometry={geo} scale={[0.075, 0.07, 0.06]} rotation={[Math.PI, 0, 0]} renderOrder={14}>
         <meshStandardMaterial
           color={c} emissive={c} emissiveIntensity={ei}
           transparent opacity={h ? 0.9 : 0.75}
-          roughness={0.35} metalness={0.15}
+          roughness={0.3} metalness={0.15} depthWrite={false} side={THREE.DoubleSide}
         />
       </mesh>
       {/* Aorta - main vessel going up */}
-      <mesh position={[0.01, 0.06, -0.01]} rotation={[0.2, 0, -0.15]}>
+      <mesh position={[0.01, 0.06, -0.01]} rotation={[0.2, 0, -0.15]} renderOrder={15}>
         <tubeGeometry args={[
           new THREE.CatmullRomCurve3([
             new THREE.Vector3(0, 0, 0),
@@ -43,10 +43,10 @@ export function HeartOrgan({ risk, onClick }: { risk: OrganRisk; onClick?: (r: O
           ]),
           8, 0.008, 6, false
         ]} />
-        <meshStandardMaterial color={c} emissive={c} emissiveIntensity={ei * 0.7} transparent opacity={0.65} roughness={0.4} />
+        <meshStandardMaterial color={c} emissive={c} emissiveIntensity={ei * 0.7} transparent opacity={0.65} roughness={0.4} depthWrite={false} />
       </mesh>
       {/* Pulmonary arteries */}
-      <mesh position={[-0.02, 0.05, 0.01]}>
+      <mesh position={[-0.02, 0.05, 0.01]} renderOrder={15}>
         <tubeGeometry args={[
           new THREE.CatmullRomCurve3([
             new THREE.Vector3(0, 0, 0),
@@ -55,12 +55,12 @@ export function HeartOrgan({ risk, onClick }: { risk: OrganRisk; onClick?: (r: O
           ]),
           6, 0.005, 5, false
         ]} />
-        <meshStandardMaterial color={c} emissive={c} emissiveIntensity={ei * 0.5} transparent opacity={0.55} roughness={0.4} />
+        <meshStandardMaterial color={c} emissive={c} emissiveIntensity={ei * 0.5} transparent opacity={0.55} roughness={0.4} depthWrite={false} />
       </mesh>
       {/* Glow halo */}
-      <mesh scale={[0.08, 0.08, 0.065]}>
+      <mesh scale={[0.11, 0.11, 0.09]} renderOrder={13}>
         <sphereGeometry args={[1, 10, 10]} />
-        <meshBasicMaterial color={c} transparent opacity={h ? 0.18 : 0.08} />
+        <meshBasicMaterial color={c} transparent opacity={h ? 0.24 : 0.12} depthWrite={false} />
       </mesh>
     </group>
   );
