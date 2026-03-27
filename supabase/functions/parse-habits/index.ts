@@ -86,7 +86,19 @@ Also provide a brief, friendly 1-2 sentence summary of what you interpreted. Be 
 
     const parsed = JSON.parse(toolCall.function.arguments);
 
-    return new Response(JSON.stringify(parsed), {
+    // Restructure: flat → { habits, summary }
+    const result = {
+      habits: {
+        smoking: Math.min(2, Math.max(0, Math.round(parsed.smoking ?? 0))),
+        alcohol: Math.min(2, Math.max(0, Math.round(parsed.alcohol ?? 0))),
+        sleep: Math.min(2, Math.max(0, Math.round(parsed.sleep ?? 0))),
+        exercise: Math.min(2, Math.max(0, Math.round(parsed.exercise ?? 0))),
+        diet: Math.min(2, Math.max(0, Math.round(parsed.diet ?? 0))),
+      },
+      summary: parsed.summary || "Habits analyzed.",
+    };
+
+    return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
