@@ -1,21 +1,15 @@
 import { useState, useMemo } from 'react';
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft, ChevronDown, AlertTriangle, CheckCircle2, AlertCircle, Info } from 'lucide-react';
+import { ChevronDown, AlertTriangle, CheckCircle2, AlertCircle, Info } from 'lucide-react';
+import AppHeader from '@/components/AppHeader';
+import { useHealthState } from '@/hooks/use-health-state';
 import {
   type BloodBiomarkers,
   type DiseaseRisk,
-  DEFAULT_BIOMARKERS,
   BIOMARKER_FIELDS,
   calculateDiseaseRisks,
 } from '@/lib/biomarker-types';
-import {
-  type Habits,
-  type Demographics,
-  DEFAULT_HABITS,
-  DEFAULT_DEMOGRAPHICS,
-} from '@/lib/health-types';
 
 export const Route = createFileRoute('/health-data')({
   component: HealthDataPage,
@@ -132,19 +126,11 @@ function DiseaseCard({ disease, index }: { disease: DiseaseRisk; index: number }
 }
 
 function HealthDataPage() {
-  const [biomarkers, setBiomarkers] = useState<BloodBiomarkers>(() => {
-    try {
-      const saved = localStorage.getItem('health-biomarkers');
-      return saved ? JSON.parse(saved) : DEFAULT_BIOMARKERS;
-    } catch { return DEFAULT_BIOMARKERS; }
-  });
-  const [habits] = useState<Habits>(DEFAULT_HABITS);
-  const [demographics, setDemographics] = useState<Demographics>(DEFAULT_DEMOGRAPHICS);
+  const { biomarkers, setBiomarkers, habits, demographics, setDemographics } = useHealthState();
 
-  // Quick demographics for this page
-  const updateDemo = (field: keyof Demographics, value: string) => {
+  const updateDemo = (field: keyof typeof demographics, value: string) => {
     if (field === 'sex') {
-      setDemographics(prev => ({ ...prev, sex: value as Demographics['sex'] }));
+      setDemographics(prev => ({ ...prev, sex: value as typeof demographics.sex }));
     } else {
       const num = value === '' ? null : parseInt(value, 10);
       setDemographics(prev => ({ ...prev, [field]: isNaN(num as number) ? null : num }));
@@ -152,11 +138,7 @@ function HealthDataPage() {
   };
 
   const updateBiomarker = (key: keyof BloodBiomarkers, val: number | null) => {
-    setBiomarkers(prev => {
-      const next = { ...prev, [key]: val };
-      localStorage.setItem('health-biomarkers', JSON.stringify(next));
-      return next;
-    });
+    setBiomarkers(prev => ({ ...prev, [key]: val }));
   };
 
   const diseases = useMemo(() => calculateDiseaseRisks(habits, demographics, biomarkers), [habits, demographics, biomarkers]);
@@ -164,7 +146,6 @@ function HealthDataPage() {
   const filledCount = Object.values(biomarkers).filter(v => v !== null).length;
   const totalCount = Object.keys(biomarkers).length;
 
-  // Group biomarker fields
   const groups = BIOMARKER_FIELDS.reduce<Record<string, typeof BIOMARKER_FIELDS>>((acc, f) => {
     if (f.maleOnly && demographics.sex === 'female') return acc;
     (acc[f.group] ??= []).push(f);
@@ -173,35 +154,23 @@ function HealthDataPage() {
 
   const [expandedGroup, setExpandedGroup] = useState<string | null>('Lipid Panel');
 
-  // Disease overview summary
   const criticalCount = diseases.filter(d => d.risk === 'critical' || d.risk === 'high').length;
   const moderateCount = diseases.filter(d => d.risk === 'moderate').length;
   const lowCount = diseases.filter(d => d.risk === 'low').length;
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border px-4 py-2.5 sm:px-6 lg:px-8 bg-card sticky top-0 z-20">
-        <div className="max-w-[1200px] mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link to="/">
-              <Button variant="ghost" size="sm" className="gap-1.5 text-[11px] h-7 px-2">
-                <ArrowLeft className="w-3 h-3" />
-                Dashboard
-              </Button>
-            </Link>
-            <div className="w-px h-4 bg-border" />
-            <h1 className="text-sm font-bold text-foreground font-display">Health Data & Disease Risk</h1>
-          </div>
-          <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-            <span className="font-mono">{filledCount}/{totalCount} fields filled</span>
-            <span className="text-[9px] px-2 py-0.5 rounded bg-muted">All fields optional</span>
-          </div>
-        </div>
-      </header>
+      <AppHeader />
 
-      <main className="px-4 sm:px-6 lg:px-8 py-4">
+      <main className="px-4 sm:px-6 lg:px-8 py-5">
         <div className="max-w-[1200px] mx-auto">
+
+          <div className="mb-5">
+            <h2 className="text-lg font-bold text-foreground font-display">Blood Work & Disease Risk</h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Enter your blood test results (all optional) for more accurate risk projections. <span className="font-mono">{filledCount}/{totalCount} filled</span>
+            </p>
+          </div>
 
           {/* Overview bar */}
           <div className="rounded-xl border border-border bg-card px-4 py-3 mb-4">
