@@ -42,28 +42,15 @@ function FutureYou() {
     setChatLoading(true);
 
     try {
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-
-      const resp = await fetch(`${supabaseUrl}/functions/v1/parse-habits`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${supabaseKey}`,
-        },
-        body: JSON.stringify({ message }),
+      const { data, error } = await supabase.functions.invoke('parse-habits', {
+        body: { message },
       });
 
-      if (!resp.ok) {
-        const err = await resp.json().catch(() => ({ error: 'Failed' }));
-        if (resp.status === 429) toast.error('Rate limited — try again shortly.');
-        else if (resp.status === 402) toast.error('AI credits exhausted.');
-        else toast.error(err.error || 'Something went wrong.');
+      if (error) {
+        toast.error('Something went wrong parsing your habits.');
         setChatLoading(false);
         return;
       }
-
-      const data = await resp.json();
       if (data.habits) {
         setHabits({
           smoking: data.habits.smoking as HabitLevel,
