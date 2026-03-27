@@ -3,13 +3,13 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Float } from '@react-three/drei';
 import * as THREE from 'three';
 import type { OrganRisk } from '@/lib/health-types';
-import { createLatheBody, createTorsoGeometry } from './3d/organ-utils';
 import { BrainOrgan } from './3d/BrainOrgan';
 import { HeartOrgan } from './3d/HeartOrgan';
 import { LungOrgan } from './3d/LungOrgan';
 import { LiverOrgan } from './3d/LiverOrgan';
 import { KidneyOrgan } from './3d/KidneyOrgan';
 import { BodyFatOrgan } from './3d/BodyFatOrgan';
+import { HumanBody } from './3d/HumanBody';
 
 /* ── Floating Particles ── */
 function Particles({ count = 40 }: { count?: number }) {
