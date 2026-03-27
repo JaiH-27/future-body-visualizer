@@ -72,3 +72,4 @@ export default function OrganInsightCard({ organ }: OrganInsightCardProps) {
       </div>
     </div>
   );
+}
