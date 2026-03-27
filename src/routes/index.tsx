@@ -1,8 +1,8 @@
 import { useState, useCallback } from 'react';
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { RotateCcw, Clock } from 'lucide-react';
+import { RotateCcw, Clock, FlaskConical } from 'lucide-react';
 import BodyVisualization3D from '@/components/BodyVisualization3D';
 import HabitSelector from '@/components/HabitSelector';
 import DemographicsInput from '@/components/DemographicsInput';
@@ -134,6 +134,12 @@ function FutureYou() {
             <Clock className="w-3 h-3" />
             <span className="font-mono">Updated {now}</span>
             <div className="w-px h-4 bg-border mx-1" />
+            <Link to="/health-data">
+              <Button variant="outline" size="sm" className="text-[11px] gap-1 h-7 px-2">
+                <FlaskConical className="w-3 h-3" />
+                Blood Work & Disease Risk
+              </Button>
+            </Link>
             <HealthReportPDF risks={risks} habits={habits} demographics={demographics} years={years} chatMessages={chatMessages} />
             <Button variant="outline" size="sm" onClick={handleReset} className="text-[11px] gap-1 h-7 px-2">
               <RotateCcw className="w-3 h-3" />
