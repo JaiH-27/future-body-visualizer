@@ -44,11 +44,6 @@ function FutureYou() {
     try {
       const data = await parseHabits({ data: { message } });
 
-      if (error) {
-        toast.error('Something went wrong parsing your habits.');
-        setChatLoading(false);
-        return;
-      }
       if (data.habits) {
         setHabits({
           smoking: data.habits.smoking as HabitLevel,
