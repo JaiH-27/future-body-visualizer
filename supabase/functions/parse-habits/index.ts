@@ -42,25 +42,18 @@ Also provide a brief, friendly 1-2 sentence summary of what you interpreted. Be 
             type: "function",
             function: {
               name: "parse_habits",
-              description: "Parse user habits into structured format",
+              description: "Parse user habits into structured format. Each habit is 0 (best), 1 (moderate), or 2 (worst).",
               parameters: {
                 type: "object",
                 properties: {
-                  habits: {
-                    type: "object",
-                    properties: {
-                      smoking: { type: "number", enum: [0, 1, 2] },
-                      alcohol: { type: "number", enum: [0, 1, 2] },
-                      sleep: { type: "number", enum: [0, 1, 2] },
-                      exercise: { type: "number", enum: [0, 1, 2] },
-                      diet: { type: "number", enum: [0, 1, 2] },
-                    },
-                    required: ["smoking", "alcohol", "sleep", "exercise", "diet"],
-                  },
-                  summary: { type: "string", description: "Brief friendly interpretation" },
+                  smoking: { type: "number", description: "0=none, 1=occasional, 2=daily" },
+                  alcohol: { type: "number", description: "0=none, 1=weekends, 2=frequent" },
+                  sleep: { type: "number", description: "0=8h+, 1=6h, 2=5h or less" },
+                  exercise: { type: "number", description: "0=regular, 1=low, 2=none" },
+                  diet: { type: "number", description: "0=balanced, 1=average, 2=poor" },
+                  summary: { type: "string", description: "Brief friendly interpretation of the habits" },
                 },
-                required: ["habits", "summary"],
-                additionalProperties: false,
+                required: ["smoking", "alcohol", "sleep", "exercise", "diet", "summary"],
               },
             },
           },
