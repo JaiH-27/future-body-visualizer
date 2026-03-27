@@ -24,7 +24,7 @@ export interface Demographics {
   sex: 'male' | 'female' | 'other' | null;
 }
 
-export type OrganId = 'brain' | 'heart' | 'lungs' | 'liver' | 'body-fat';
+export type OrganId = 'brain' | 'heart' | 'lungs' | 'liver' | 'body-fat' | 'kidneys';
 
 export type TimelineYear = 0 | 5 | 10 | 20;
 
@@ -168,11 +168,24 @@ export function calculateOrganRisks(habits: Habits, years: TimelineYear, demogra
       : 'Significant metabolic and weight concerns. CDC: obesity doubles the risk of 13 types of cancer.',
   };
 
+  // Kidney score: NIH — dehydration and high-sodium diets are leading modifiable kidney risk factors
+  const kidneyScore = Math.min(100,
+    (habits.hydration * 28 + habits.diet * 18 + habits.alcohol * 10 + habits.smoking * 5 + habits.stress * 5) *
+    (0.3 + timeFactor * 0.7) * ageMod
+  );
+
+  const kidneySummary = (r: RiskLevel): string =>
+    r === 'low' ? 'Kidney function healthy. NIH notes adequate hydration supports optimal renal filtration and waste clearance.'
+    : r === 'moderate' ? 'Mild kidney strain. CDC: chronic dehydration can reduce kidney efficiency by 10-20% over time.'
+    : r === 'high' ? 'Elevated kidney risk. WHO: poor hydration and high-sodium diets are among the top modifiable risk factors for chronic kidney disease.'
+    : 'Critical kidney risk. NIH: severe dehydration combined with poor diet can accelerate kidney disease progression significantly.';
+
   return [
     { organ: 'brain', label: 'Brain', risk: toRisk(brainScore), score: brainScore, summary: summaries.brain(toRisk(brainScore)) },
     { organ: 'heart', label: 'Heart', risk: toRisk(heartScore), score: heartScore, summary: summaries.heart(toRisk(heartScore)) },
     { organ: 'lungs', label: 'Lungs', risk: toRisk(lungScore), score: lungScore, summary: summaries.lungs(toRisk(lungScore)) },
     { organ: 'liver', label: 'Liver', risk: toRisk(liverScore), score: liverScore, summary: summaries.liver(toRisk(liverScore)) },
+    { organ: 'kidneys', label: 'Kidneys', risk: toRisk(kidneyScore), score: kidneyScore, summary: kidneySummary(toRisk(kidneyScore)) },
     { organ: 'body-fat', label: 'Body Fat', risk: toRisk(fatScore), score: fatScore, summary: summaries['body-fat'](toRisk(fatScore)) },
   ];
 }

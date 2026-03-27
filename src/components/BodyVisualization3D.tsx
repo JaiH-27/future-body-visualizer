@@ -330,6 +330,10 @@ function Scene({ risks, onOrganClick }: { risks: OrganRisk[]; onOrganClick?: (or
           {/* Liver */}
           <GlowOrgan risk={get('liver')} position={[0.12, 0.98, 0.06]} scale={[0.10, 0.06, 0.055]} rotation={[0, 0, -0.3]} onClick={onOrganClick} />
 
+          {/* Kidneys */}
+          <GlowOrgan risk={get('kidneys')} position={[-0.14, 0.92, -0.04]} scale={[0.045, 0.06, 0.035]} onClick={onOrganClick} />
+          <GlowOrgan risk={get('kidneys')} position={[0.14, 0.92, -0.04]} scale={[0.045, 0.06, 0.035]} onClick={onOrganClick} />
+
           {/* Body Fat */}
           <GlowOrgan risk={get('body-fat')} position={[0, 0.82, 0.1]} scale={[0.18, 0.09, 0.09]} onClick={onOrganClick} />
         </group>

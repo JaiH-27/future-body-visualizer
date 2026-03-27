@@ -13,6 +13,7 @@ const ORGAN_ICONS: Record<string, string> = {
   heart: '❤️',
   lungs: '🫁',
   liver: '🫀',
+  kidneys: '🫘',
   'body-fat': '🏋️',
 };
 
