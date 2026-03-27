@@ -20,21 +20,21 @@ export function LungOrgan({ risk, side, onClick }: { risk: OrganRisk; side: 'lef
   });
 
   return (
-    <group ref={ref} position={[x, 1.22, 0.02]}
+    <group ref={ref} position={[side === 'left' ? -0.18 : 0.18, 1.22, 0.14]}
       onClick={(e) => { e.stopPropagation(); onClick?.(risk); }}
       onPointerOver={(e) => { e.stopPropagation(); setH(true); document.body.style.cursor = 'pointer'; }}
       onPointerOut={() => { setH(false); document.body.style.cursor = 'default'; }}>
       {side === 'left' && <OrganTooltip risk={risk} visible={h} />}
       {/* Main lung lobe */}
-      <mesh geometry={geo} scale={[0.10, 0.16, 0.08]}>
+      <mesh geometry={geo} scale={[0.125, 0.2, 0.11]} renderOrder={12}>
         <meshStandardMaterial
           color={c} emissive={c} emissiveIntensity={ei}
           transparent opacity={h ? 0.75 : 0.6}
-          roughness={0.4} metalness={0.05}
+          roughness={0.35} metalness={0.05} depthWrite={false} side={THREE.DoubleSide}
         />
       </mesh>
       {/* Bronchi tubes */}
-      <mesh position={[side === 'left' ? 0.04 : -0.04, 0.12, 0]}>
+      <mesh position={[side === 'left' ? 0.04 : -0.04, 0.12, 0]} renderOrder={13}>
         <tubeGeometry args={[
           new THREE.CatmullRomCurve3([
             new THREE.Vector3(0, 0, 0),
@@ -43,10 +43,10 @@ export function LungOrgan({ risk, side, onClick }: { risk: OrganRisk; side: 'lef
           ]),
           6, 0.006, 5, false
         ]} />
-        <meshStandardMaterial color={c} emissive={c} emissiveIntensity={ei * 0.5} transparent opacity={0.5} roughness={0.4} />
+        <meshStandardMaterial color={c} emissive={c} emissiveIntensity={ei * 0.5} transparent opacity={0.5} roughness={0.4} depthWrite={false} />
       </mesh>
       {/* Secondary bronchi */}
-      <mesh position={[side === 'left' ? 0.03 : -0.03, 0.04, 0.01]}>
+      <mesh position={[side === 'left' ? 0.03 : -0.03, 0.04, 0.01]} renderOrder={13}>
         <tubeGeometry args={[
           new THREE.CatmullRomCurve3([
             new THREE.Vector3(0, 0, 0),
@@ -55,12 +55,12 @@ export function LungOrgan({ risk, side, onClick }: { risk: OrganRisk; side: 'lef
           ]),
           5, 0.004, 4, false
         ]} />
-        <meshStandardMaterial color={c} emissive={c} emissiveIntensity={ei * 0.4} transparent opacity={0.4} roughness={0.5} />
+        <meshStandardMaterial color={c} emissive={c} emissiveIntensity={ei * 0.4} transparent opacity={0.4} roughness={0.5} depthWrite={false} />
       </mesh>
       {/* Outer glow */}
-      <mesh scale={[0.13, 0.19, 0.11]}>
+      <mesh scale={[0.17, 0.25, 0.14]} renderOrder={11}>
         <sphereGeometry args={[1, 12, 12]} />
-        <meshBasicMaterial color={c} transparent opacity={h ? 0.15 : 0.06} />
+        <meshBasicMaterial color={c} transparent opacity={h ? 0.2 : 0.1} depthWrite={false} />
       </mesh>
     </group>
   );
