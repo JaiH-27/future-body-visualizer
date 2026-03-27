@@ -102,6 +102,15 @@ function FutureYou() {
     if (preset) setHabits(preset.habits);
   }, []);
 
+  const handleReset = useCallback(() => {
+    setHabits(DEFAULT_HABITS);
+    setDemographics(DEFAULT_DEMOGRAPHICS);
+    setYears(0);
+    setSelectedOrgan(null);
+    setChatMessages([]);
+    toast.success('All settings reset to defaults.');
+  }, []);
+
   return (
     <div className="min-h-screen bg-mesh">
       {/* Header */}
@@ -119,9 +128,13 @@ function FutureYou() {
               Educational Demo
             </span>
           </div>
-          <p className="hidden sm:block text-sm text-muted-foreground max-w-xs text-right">
-            Visualize how your habits may affect your body over time
-          </p>
+          <div className="hidden sm:flex items-center gap-2">
+            <HealthReportPDF risks={risks} habits={habits} demographics={demographics} years={years} chatMessages={chatMessages} />
+            <Button variant="outline" size="sm" onClick={handleReset} className="text-xs gap-1.5">
+              <RotateCcw className="w-3.5 h-3.5" />
+              Reset
+            </Button>
+          </div>
         </div>
       </header>
 
