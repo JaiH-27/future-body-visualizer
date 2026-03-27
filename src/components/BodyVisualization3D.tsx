@@ -110,7 +110,37 @@ function HumanBody() {
     { y: -0.44, rx: 0.15, rz: 0.08 },             // groin taper
   ], 24), []);
 
-  return (
+  const wc2 = wc; // alias for Limb
+
+  // Limb helper - inline
+  const renderLimb = (
+    pos: [number, number, number],
+    rot: [number, number, number],
+    segments: { rTop: number; rBot: number; len: number }[],
+  ) => {
+    let ly = 0;
+    return (
+      <group position={pos} rotation={rot as unknown as THREE.Euler}>
+        {segments.map((seg, idx) => {
+          const my = ly - seg.len / 2;
+          ly -= seg.len;
+          return (
+            <group key={idx}>
+              <mesh position={[0, my, 0]}>
+                <cylinderGeometry args={[seg.rTop, seg.rBot, seg.len, 14, 1, true]} />
+                <meshStandardMaterial color="#ddd5e8" transparent opacity={0.07} roughness={0.9} side={THREE.DoubleSide} />
+              </mesh>
+              <mesh position={[0, my, 0]}>
+                <cylinderGeometry args={[seg.rTop, seg.rBot, seg.len, 14, 1, true]} />
+                <meshBasicMaterial color={wc2} wireframe transparent opacity={0.22} />
+              </mesh>
+            </group>
+          );
+        })}
+      </group>
+    );
+  };
+
     <group>
       {/* Head */}
       <group position={[0, 1.78, 0]}>
