@@ -102,7 +102,7 @@ export default function AISummaryCard({ risks, years }: AISummaryCardProps) {
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold text-foreground">{risk.label} at Risk</span>
                   <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${styles.badge}`}>
-                    {risk.score}%
+                    {risk.score.toFixed(2)}%
                   </span>
                 </div>
                 <p className="text-[11px] text-muted-foreground truncate mt-0.5">
@@ -156,7 +156,7 @@ export default function AISummaryCard({ risks, years }: AISummaryCardProps) {
                   <span>{ORGAN_ICONS[risk.organ]}</span> {risk.label}
                 </span>
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-severity-warn text-severity-warn-foreground font-medium">
-                  {risk.score}%
+                  {risk.score.toFixed(2)}%
                 </span>
               </div>
             ))}

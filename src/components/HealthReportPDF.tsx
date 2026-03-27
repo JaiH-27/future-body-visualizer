@@ -119,7 +119,7 @@ export default function HealthReportPDF({ risks, habits, demographics, years, ch
     <div class="organ-card" style="border-color: ${RISK_COLORS[r.risk]}">
       <div class="organ-header">
         <span class="organ-name">${ORGAN_ICONS[r.organ] || '🫀'} ${r.label}</span>
-        <span class="risk-badge" style="background: ${RISK_COLORS[r.risk]}">${r.risk} · ${r.score}%</span>
+        <span class="risk-badge" style="background: ${RISK_COLORS[r.risk]}">${r.risk} · ${r.score.toFixed(2)}%</span>
       </div>
       <div class="score-bar"><div class="score-fill" style="width: ${r.score}%; background: ${RISK_COLORS[r.risk]}"></div></div>
       <div class="organ-summary">${r.summary}</div>

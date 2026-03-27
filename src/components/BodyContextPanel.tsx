@@ -72,7 +72,7 @@ export default function BodyContextPanel({ risks, hoveredOrgan, selectedOrgan }:
                 : activeOrgan.risk === 'moderate' ? 'bg-severity-warn/15 text-severity-warn'
                 : 'bg-severity-bad/15 text-severity-bad'
               }`}>
-                {activeOrgan.score}%
+                {activeOrgan.score.toFixed(2)}%
               </span>
             </div>
             <div className="h-1.5 rounded-full bg-muted/40 overflow-hidden mb-2">

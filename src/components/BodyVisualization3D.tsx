@@ -254,7 +254,7 @@ function OrganTooltip({ risk, visible }: { risk: OrganRisk; visible: boolean }) 
       >
         <span style={{ color: RISK_COLORS[risk.risk] }}>●</span>{' '}
         {ORGAN_LABELS[risk.organ] || risk.label}: {RISK_LABELS[risk.risk]}
-        <span className="ml-1.5 opacity-60">{risk.score}%</span>
+        <span className="ml-1.5 opacity-60">{risk.score.toFixed(2)}%</span>
       </div>
     </Html>
   );
