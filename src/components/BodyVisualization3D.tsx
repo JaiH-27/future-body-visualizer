@@ -13,7 +13,6 @@ const RISK_COLORS: Record<RiskLevel, string> = {
 
 /**
  * Creates a smooth body-of-revolution from a 2D profile.
- * Points: [radius, y] pairs from top to bottom.
  */
 function createLatheBody(profile: [number, number][], segments = 32): THREE.LatheGeometry {
   const points = profile.map(([r, y]) => new THREE.Vector2(r, y));
@@ -21,48 +20,59 @@ function createLatheBody(profile: [number, number][], segments = 32): THREE.Lath
 }
 
 /**
- * Creates a limb mesh from a path of [radius, length] segments
- * using tapered cylinders joined end-to-end.
+ * Creates a human torso from elliptical cross-sections.
+ * Each slice: { y, rx (side width), rz (front depth), zOff (forward lean) }
  */
-function Limb({
-  path,
-  position,
-  rotation,
-  wireColor,
-}: {
-  path: { rTop: number; rBot: number; len: number }[];
-  position: [number, number, number];
-  rotation: [number, number, number];
-  wireColor: string;
-}) {
-  let y = 0;
-  return (
-    <group position={position} rotation={rotation as unknown as THREE.Euler}>
-      {path.map((seg, i) => {
-        const meshY = y - seg.len / 2;
-        y -= seg.len;
-        return (
-          <group key={i}>
-            <mesh position={[0, meshY, 0]}>
-              <cylinderGeometry args={[seg.rTop, seg.rBot, seg.len, 14, 1, true]} />
-              <meshStandardMaterial color="#ddd5e8" transparent opacity={0.07} roughness={0.9} side={THREE.DoubleSide} />
-            </mesh>
-            <mesh position={[0, meshY, 0]}>
-              <cylinderGeometry args={[seg.rTop, seg.rBot, seg.len, 14, 1, true]} />
-              <meshBasicMaterial color={wireColor} wireframe transparent opacity={0.22} />
-            </mesh>
-          </group>
-        );
-      })}
-    </group>
-  );
+function createTorsoGeometry(
+  slices: { y: number; rx: number; rz: number; zOff?: number }[],
+  radialSegs = 24,
+): THREE.BufferGeometry {
+  const positions: number[] = [];
+  const normals: number[] = [];
+  const indices: number[] = [];
+
+  // Generate vertices per slice
+  for (let s = 0; s < slices.length; s++) {
+    const { y, rx, rz, zOff = 0 } = slices[s];
+    for (let r = 0; r <= radialSegs; r++) {
+      const theta = (r / radialSegs) * Math.PI * 2;
+      const cos = Math.cos(theta);
+      const sin = Math.sin(theta);
+      const x = cos * rx;
+      const z = sin * rz + zOff;
+      positions.push(x, y, z);
+      // Approximate normal
+      const nx = cos / rx;
+      const nz = sin / rz;
+      const len = Math.sqrt(nx * nx + nz * nz) || 1;
+      normals.push(nx / len, 0, nz / len);
+    }
+  }
+
+  // Generate indices
+  const vertsPerSlice = radialSegs + 1;
+  for (let s = 0; s < slices.length - 1; s++) {
+    for (let r = 0; r < radialSegs; r++) {
+      const a = s * vertsPerSlice + r;
+      const b = a + 1;
+      const c = a + vertsPerSlice;
+      const d = c + 1;
+      indices.push(a, c, b, b, c, d);
+    }
+  }
+
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geo.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
+  geo.setIndex(indices);
+  geo.computeVertexNormals();
+  return geo;
 }
 
 /* ── Human Body ── */
 function HumanBody() {
   const wc = '#9b8ec7';
 
-  // Head profile (revolution): radius, y (top to bottom)
   const headGeo = useMemo(() => createLatheBody([
     [0, 0.24],
     [0.06, 0.22],
@@ -78,24 +88,26 @@ function HumanBody() {
     [0, -0.19],
   ], 24), []);
 
-  // Torso profile (revolution)
-  const torsoGeo = useMemo(() => createLatheBody([
-    [0, 0.42],
-    [0.08, 0.40],  // neck base
-    [0.12, 0.36],
-    [0.22, 0.30],  // shoulders widen
-    [0.30, 0.22],
-    [0.33, 0.12],  // chest
-    [0.32, 0.02],
-    [0.28, -0.08], // waist narrows
-    [0.26, -0.14],
-    [0.25, -0.18],
-    [0.28, -0.24], // hips widen
-    [0.30, -0.30],
-    [0.28, -0.36],
-    [0.22, -0.40],
-    [0.16, -0.42],
-    [0, -0.42],
+  // Anatomical torso: elliptical cross-sections from neck to groin
+  // rx = side width, rz = front-back depth, zOff = forward chest protrusion
+  const torsoGeo = useMemo(() => createTorsoGeometry([
+    { y: 0.44, rx: 0.07, rz: 0.06 },            // neck base
+    { y: 0.40, rx: 0.10, rz: 0.07 },             // neck-shoulder transition
+    { y: 0.35, rx: 0.18, rz: 0.09 },             // trapezius
+    { y: 0.30, rx: 0.28, rz: 0.11, zOff: 0.01 }, // shoulder line
+    { y: 0.24, rx: 0.32, rz: 0.13, zOff: 0.02 }, // upper chest / delts
+    { y: 0.18, rx: 0.33, rz: 0.15, zOff: 0.03 }, // pec area (widest + deepest)
+    { y: 0.12, rx: 0.32, rz: 0.14, zOff: 0.02 }, // lower pecs
+    { y: 0.06, rx: 0.30, rz: 0.13, zOff: 0.01 }, // ribcage
+    { y: 0.00, rx: 0.28, rz: 0.12 },              // lower ribs
+    { y: -0.06, rx: 0.25, rz: 0.11 },             // waist narrows
+    { y: -0.12, rx: 0.24, rz: 0.10 },             // navel
+    { y: -0.18, rx: 0.23, rz: 0.10 },             // lower abs
+    { y: -0.24, rx: 0.25, rz: 0.11 },             // iliac crest (hip bones)
+    { y: -0.30, rx: 0.28, rz: 0.12, zOff: -0.01 }, // hips widen
+    { y: -0.36, rx: 0.27, rz: 0.13, zOff: -0.01 }, // glutes
+    { y: -0.40, rx: 0.22, rz: 0.11 },             // upper thigh junction
+    { y: -0.44, rx: 0.15, rz: 0.08 },             // groin taper
   ], 24), []);
 
   return (
