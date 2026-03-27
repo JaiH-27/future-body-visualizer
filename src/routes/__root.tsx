@@ -11,13 +11,15 @@ export const Route = createRootRoute({
       { title: "Future You — AI Health Twin" },
       { name: "description", content: "Lovable Generated Project" },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
+      { property: "og:title", content: "Future You — AI Health Twin" },
       { property: "og:description", content: "Lovable Generated Project" },
       { property: "og:type", content: "website" },
-      { property: "og:image", content: "https://lovable.dev/opengraph-image-p98pqg.png" },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/804c5c1a-ed81-45d4-a5dc-942035d49778/id-preview-d3c1b1a6--d3ee4e87-8b18-4129-b5eb-dd6051bd52b7.lovable.app-1774624039594.png" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Lovable" },
-      { name: "twitter:image", content: "https://lovable.dev/opengraph-image-p98pqg.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/804c5c1a-ed81-45d4-a5dc-942035d49778/id-preview-d3c1b1a6--d3ee4e87-8b18-4129-b5eb-dd6051bd52b7.lovable.app-1774624039594.png" },
+      { name: "twitter:title", content: "Future You — AI Health Twin" },
+      { name: "twitter:description", content: "Lovable Generated Project" },
     ],
     links: [
       {
