@@ -1,5 +1,6 @@
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from '@tanstack/react-router';
-import { Activity, User, FlaskConical, RotateCcw } from 'lucide-react';
+import { Activity, User, FlaskConical, RotateCcw, Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const NAV_ITEMS = [
@@ -15,6 +16,16 @@ interface AppHeaderProps {
 
 export default function AppHeader({ onReset, extraActions }: AppHeaderProps) {
   const location = useLocation();
+  const [dark, setDark] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('theme') === 'dark' || 
+      (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', dark);
+    localStorage.setItem('theme', dark ? 'dark' : 'light');
+  }, [dark]);
 
   return (
     <header className="border-b border-border px-4 py-2 sm:px-6 lg:px-8 bg-card sticky top-0 z-20">
@@ -44,6 +55,14 @@ export default function AppHeader({ onReset, extraActions }: AppHeaderProps) {
         </div>
         <div className="flex items-center gap-2">
           {extraActions}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setDark(!dark)}
+            className="h-8 w-8 p-0"
+          >
+            {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </Button>
           {onReset && (
             <Button variant="outline" size="sm" onClick={onReset} className="text-xs gap-1.5 h-8 px-3">
               <RotateCcw className="w-3.5 h-3.5" />
