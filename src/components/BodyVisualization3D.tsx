@@ -76,14 +76,16 @@ function createTorsoGeometry(
 /* ── Floating Particles ── */
 function Particles({ count = 40 }: { count?: number }) {
   const ref = useRef<THREE.Points>(null);
-  const positions = useMemo(() => {
+  const geo = useMemo(() => {
+    const g = new THREE.BufferGeometry();
     const arr = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
       arr[i * 3] = (Math.random() - 0.5) * 1.2;
       arr[i * 3 + 1] = Math.random() * 2.2 - 0.2;
       arr[i * 3 + 2] = (Math.random() - 0.5) * 0.8;
     }
-    return arr;
+    g.setAttribute('position', new THREE.Float32BufferAttribute(arr, 3));
+    return g;
   }, [count]);
 
   useFrame((state) => {
@@ -98,11 +100,10 @@ function Particles({ count = 40 }: { count?: number }) {
   });
 
   return (
-    <points ref={ref}>
-      <bufferGeometry>
-        <bufferAttribute attach="attributes-position" count={count} array={positions} itemSize={3} />
-      </bufferGeometry>
+    <points ref={ref} geometry={geo}>
       <pointsMaterial size={0.008} color="#c4b5fd" transparent opacity={0.4} sizeAttenuation />
+    </points>
+  );
     </points>
   );
 }
