@@ -122,6 +122,7 @@ export default function WhatIfMode({ habits, demographics, years }: WhatIfModePr
           </motion.div>
         )}
       </AnimatePresence>
+      </div>
     </div>
   );
 }
