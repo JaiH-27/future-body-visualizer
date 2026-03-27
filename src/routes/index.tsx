@@ -33,6 +33,7 @@ function FutureYou() {
   const [chatLoading, setChatLoading] = useState(false);
 
   const risks = calculateOrganRisks(habits, years);
+  const parseHabitsFn = useServerFn(parseHabits);
 
   const handleOrganClick = useCallback((organ: OrganRisk) => {
     setSelectedOrgan(organ);
@@ -43,7 +44,7 @@ function FutureYou() {
     setChatLoading(true);
 
     try {
-      const data = await parseHabits({ data: { message } });
+      const data = await parseHabitsFn({ data: { message } });
 
       if (data.habits) {
         setHabits({
