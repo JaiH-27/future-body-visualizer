@@ -39,9 +39,12 @@ export default function FloatingAIChat() {
   const [chatLoading, setChatLoading] = useState(false);
   const [chatInput, setChatInput] = useState('');
   const [chatOpen, setChatOpen] = useState(false);
+  const [logOpen, setLogOpen] = useState(true);
   const [tabs, setTabs] = useState<ChatTab[]>(() => loadTabs());
   const [activeTabId, setActiveTabId] = useState<string>(() => loadTabs()[0]?.id || '1');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatBarRef = useRef<HTMLDivElement>(null);
+  const logRef = useRef<HTMLElement>(null);
 
   const activeTab = tabs.find(t => t.id === activeTabId) || tabs[0];
   const chatMessages = activeTab?.messages || [];
