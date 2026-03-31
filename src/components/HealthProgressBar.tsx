@@ -133,7 +133,7 @@ function estimateLifeExpectancy(habits: Habits, demographics: Demographics, biom
   return Math.round(Math.max(Math.max(age + 1, 40), Math.min(95, base)));
 }
 
-export default function HealthProgressBar({ risks, demographics, habits, years }: HealthProgressBarProps) {
+export default function HealthProgressBar({ risks, demographics, habits, years, biomarkers }: HealthProgressBarProps) {
   const healthScore = useMemo(() => {
     const avgRisk = risks.reduce((s, r) => s + r.score, 0) / risks.length;
     return Math.round(100 - avgRisk);
