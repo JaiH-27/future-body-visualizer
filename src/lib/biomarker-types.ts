@@ -122,6 +122,17 @@ export interface DiseaseRisk {
 /**
  * Calculate disease risks based on habits, demographics, and optional biomarkers.
  * References: WHO, CDC, AHA, ADA, NCI guidelines.
+ *
+ * IMPORTANT: Habit-based scores are attenuated by age because absolute disease
+ * risk from lifestyle factors accumulates over time. A 17-year-old with bad habits
+ * has a concerning TRAJECTORY but low absolute risk. Biomarker-based scores are
+ * NOT attenuated because abnormal lab values are clinically significant at any age.
+ *
+ * Age attenuation (habit components only):
+ * - Under 25: 35% (risk is mostly theoretical/future)
+ * - 25-40: scales 35% → 100% linearly
+ * - 40+: 100% (full absolute risk applies)
+ * Source: AHA/ACC ASCVD calculator only applies ages 40-79
  */
 export function calculateDiseaseRisks(
   habits: Habits,
@@ -134,25 +145,32 @@ export function calculateDiseaseRisks(
     ? demographics.weight / ((demographics.height / 100) ** 2)
     : 24;
 
+  // Age attenuation for habit-based risk components
+  // Young people have low absolute risk even with bad habits
+  const ageScale = age >= 40 ? 1.0
+    : age >= 25 ? 0.35 + (age - 25) * (0.65 / 15)
+    : 0.35;
+
   const toRisk = (s: number): DiseaseRisk['risk'] =>
-    s < 20 ? 'low' : s < 45 ? 'moderate' : s < 70 ? 'high' : 'critical';
+    s < 15 ? 'low' : s < 40 ? 'moderate' : s < 65 ? 'high' : 'critical';
 
   const diseases: DiseaseRisk[] = [];
 
   // 1. Type 2 Diabetes — ADA risk factors
-  let diabetesScore = 0;
-  diabetesScore += habits.diet * 12;
-  diabetesScore += habits.exercise * 10;
-  diabetesScore += Math.max(0, (age - 40) * 0.5);
-  if (bmi >= 30) diabetesScore += 20;
-  else if (bmi >= 25) diabetesScore += 10;
+  // Habit component scaled by age; biomarker component at full weight
+  const diabetesHabit = (habits.diet * 10 + habits.exercise * 8) * ageScale;
+  let diabetesScore = diabetesHabit;
+  diabetesScore += Math.max(0, (age - 40) * 0.4);
+  if (bmi >= 30) diabetesScore += 18;
+  else if (bmi >= 25) diabetesScore += 8;
+  // Biomarker contributions (not age-attenuated — abnormal labs are significant at any age)
   if (biomarkers.hba1c !== null) {
-    if (biomarkers.hba1c >= 6.5) diabetesScore += 35;
-    else if (biomarkers.hba1c >= 5.7) diabetesScore += 15;
+    if (biomarkers.hba1c >= 6.5) diabetesScore += 35; // diagnostic threshold
+    else if (biomarkers.hba1c >= 5.7) diabetesScore += 15; // prediabetes
   }
   if (biomarkers.fastingGlucose !== null) {
-    if (biomarkers.fastingGlucose >= 126) diabetesScore += 30;
-    else if (biomarkers.fastingGlucose >= 100) diabetesScore += 12;
+    if (biomarkers.fastingGlucose >= 126) diabetesScore += 30; // diagnostic
+    else if (biomarkers.fastingGlucose >= 100) diabetesScore += 12; // impaired fasting
   }
   diabetesScore = Math.min(100, diabetesScore);
   const diabetesFactors: string[] = [];
@@ -164,26 +182,24 @@ export function calculateDiseaseRisks(
   diseases.push({
     name: 'Type 2 Diabetes',
     risk: toRisk(diabetesScore),
-    score: diabetesScore,
+    score: parseFloat(diabetesScore.toFixed(1)),
     description: 'Chronic condition affecting blood sugar regulation. Preventable through diet, exercise, and weight management.',
     source: 'ADA Standards of Care 2024, WHO Diabetes Guidelines',
     factors: diabetesFactors.length > 0 ? diabetesFactors : ['No major risk factors detected'],
   });
 
   // 2. Cardiovascular Disease — AHA ASCVD
-  let cvdScore = 0;
-  cvdScore += habits.smoking * 18;
-  cvdScore += habits.exercise * 12;
-  cvdScore += habits.stress * 8;
-  cvdScore += habits.diet * 8;
-  cvdScore += Math.max(0, (age - 35) * 0.6);
-  if (bmi >= 30) cvdScore += 12;
-  if (biomarkers.totalCholesterol !== null && biomarkers.totalCholesterol >= 240) cvdScore += 15;
-  if (biomarkers.ldl !== null && biomarkers.ldl >= 160) cvdScore += 18;
-  if (biomarkers.hdl !== null && biomarkers.hdl < 40) cvdScore += 12;
-  if (biomarkers.systolic !== null && biomarkers.systolic >= 140) cvdScore += 20;
-  else if (biomarkers.systolic !== null && biomarkers.systolic >= 130) cvdScore += 10;
-  if (biomarkers.crp !== null && biomarkers.crp >= 3) cvdScore += 8;
+  const cvdHabit = (habits.smoking * 15 + habits.exercise * 10 + habits.stress * 7 + habits.diet * 7) * ageScale;
+  let cvdScore = cvdHabit;
+  cvdScore += Math.max(0, (age - 35) * 0.5);
+  if (bmi >= 30) cvdScore += 10;
+  // Biomarker contributions (full weight)
+  if (biomarkers.totalCholesterol !== null && biomarkers.totalCholesterol >= 240) cvdScore += 12;
+  if (biomarkers.ldl !== null && biomarkers.ldl >= 160) cvdScore += 15;
+  if (biomarkers.hdl !== null && biomarkers.hdl < 40) cvdScore += 10;
+  if (biomarkers.systolic !== null && biomarkers.systolic >= 140) cvdScore += 18;
+  else if (biomarkers.systolic !== null && biomarkers.systolic >= 130) cvdScore += 8;
+  if (biomarkers.crp !== null && biomarkers.crp >= 3) cvdScore += 6;
   cvdScore = Math.min(100, cvdScore);
   const cvdFactors: string[] = [];
   if (habits.smoking >= 2) cvdFactors.push('Daily smoking');
@@ -194,24 +210,24 @@ export function calculateDiseaseRisks(
   diseases.push({
     name: 'Cardiovascular Disease',
     risk: toRisk(cvdScore),
-    score: cvdScore,
+    score: parseFloat(cvdScore.toFixed(1)),
     description: 'Leading cause of death globally. Includes coronary artery disease, stroke, and heart failure.',
     source: 'AHA/ACC ASCVD Risk Guidelines, WHO CVD Report',
     factors: cvdFactors.length > 0 ? cvdFactors : ['No major risk factors detected'],
   });
 
-  // 3. Chronic Kidney Disease
-  let ckdScore = 0;
-  ckdScore += habits.hydration * 15;
-  ckdScore += habits.diet * 8;
+  // 3. Chronic Kidney Disease — KDIGO
+  const ckdHabit = (habits.hydration * 12 + habits.diet * 6) * ageScale;
+  let ckdScore = ckdHabit;
   ckdScore += Math.max(0, (age - 50) * 0.4);
-  if (biomarkers.creatinine !== null && biomarkers.creatinine > 1.3) ckdScore += 20;
+  // Biomarker contributions (full weight — kidney markers are diagnostic)
+  if (biomarkers.creatinine !== null && biomarkers.creatinine > 1.3) ckdScore += 18;
   if (biomarkers.egfr !== null) {
-    if (biomarkers.egfr < 60) ckdScore += 30;
-    else if (biomarkers.egfr < 90) ckdScore += 12;
+    if (biomarkers.egfr < 60) ckdScore += 28;
+    else if (biomarkers.egfr < 90) ckdScore += 10;
   }
-  if (biomarkers.bun !== null && biomarkers.bun > 20) ckdScore += 10;
-  if (biomarkers.systolic !== null && biomarkers.systolic >= 140) ckdScore += 12;
+  if (biomarkers.bun !== null && biomarkers.bun > 20) ckdScore += 8;
+  if (biomarkers.systolic !== null && biomarkers.systolic >= 140) ckdScore += 10;
   ckdScore = Math.min(100, ckdScore);
   const ckdFactors: string[] = [];
   if (habits.hydration >= 2) ckdFactors.push('Poor hydration');
@@ -220,19 +236,19 @@ export function calculateDiseaseRisks(
   diseases.push({
     name: 'Chronic Kidney Disease',
     risk: toRisk(ckdScore),
-    score: ckdScore,
+    score: parseFloat(ckdScore.toFixed(1)),
     description: 'Gradual loss of kidney function over time. Hypertension and diabetes are the leading causes.',
     source: 'NIDDK, KDIGO Guidelines 2024',
     factors: ckdFactors.length > 0 ? ckdFactors : ['No major risk factors detected'],
   });
 
-  // 4. Liver Disease
-  let liverScore = 0;
-  liverScore += habits.alcohol * 20;
-  liverScore += habits.diet * 10;
-  if (bmi >= 30) liverScore += 15;
-  if (biomarkers.alt !== null && biomarkers.alt > 56) liverScore += 20;
-  if (biomarkers.ast !== null && biomarkers.ast > 40) liverScore += 15;
+  // 4. Liver Disease — AASLD
+  const liverHabit = (habits.alcohol * 16 + habits.diet * 8) * ageScale;
+  let liverScore = liverHabit;
+  if (bmi >= 30) liverScore += 12; // NAFLD risk
+  // Biomarker contributions (full weight)
+  if (biomarkers.alt !== null && biomarkers.alt > 56) liverScore += 18;
+  if (biomarkers.ast !== null && biomarkers.ast > 40) liverScore += 12;
   liverScore = Math.min(100, liverScore);
   const liverFactors: string[] = [];
   if (habits.alcohol >= 2) liverFactors.push('Heavy alcohol use');
@@ -242,16 +258,15 @@ export function calculateDiseaseRisks(
   diseases.push({
     name: 'Liver Disease',
     risk: toRisk(liverScore),
-    score: liverScore,
+    score: parseFloat(liverScore.toFixed(1)),
     description: 'Includes fatty liver (NAFLD), alcoholic liver disease, and cirrhosis. Often silent until advanced.',
     source: 'AASLD Practice Guidelines, CDC Liver Disease Data',
     factors: liverFactors.length > 0 ? liverFactors : ['No major risk factors detected'],
   });
 
-  // 5. COPD / Lung Disease
-  let lungScore = 0;
-  lungScore += habits.smoking * 30;
-  lungScore += habits.exercise * 5;
+  // 5. COPD / Lung Disease — WHO
+  const lungHabit = (habits.smoking * 25 + habits.exercise * 4) * ageScale;
+  let lungScore = lungHabit;
   lungScore += Math.max(0, (age - 40) * 0.3);
   lungScore = Math.min(100, lungScore);
   const lungFactors: string[] = [];
@@ -259,22 +274,21 @@ export function calculateDiseaseRisks(
   diseases.push({
     name: 'COPD / Lung Disease',
     risk: toRisk(lungScore),
-    score: lungScore,
+    score: parseFloat(lungScore.toFixed(1)),
     description: 'Chronic obstructive pulmonary disease. Smoking is the primary cause of 80% of cases.',
     source: 'WHO COPD Report, CDC Chronic Disease Prevention',
     factors: lungFactors.length > 0 ? lungFactors : ['No major risk factors detected'],
   });
 
-  // 6. Hypertension
-  let htnScore = 0;
-  htnScore += habits.stress * 12;
-  htnScore += habits.diet * 10;
-  htnScore += habits.exercise * 8;
-  htnScore += Math.max(0, (age - 30) * 0.5);
+  // 6. Hypertension — AHA/JNC-8
+  const htnHabit = (habits.stress * 10 + habits.diet * 8 + habits.exercise * 6) * ageScale;
+  let htnScore = htnHabit;
+  htnScore += Math.max(0, (age - 30) * 0.4);
+  // Biomarker contributions (full weight — BP readings are diagnostic)
   if (biomarkers.systolic !== null) {
-    if (biomarkers.systolic >= 140) htnScore += 30;
-    else if (biomarkers.systolic >= 130) htnScore += 15;
-    else if (biomarkers.systolic >= 120) htnScore += 5;
+    if (biomarkers.systolic >= 140) htnScore += 28;
+    else if (biomarkers.systolic >= 130) htnScore += 14;
+    else if (biomarkers.systolic >= 120) htnScore += 4;
   }
   htnScore = Math.min(100, htnScore);
   const htnFactors: string[] = [];
@@ -284,20 +298,20 @@ export function calculateDiseaseRisks(
   diseases.push({
     name: 'Hypertension',
     risk: toRisk(htnScore),
-    score: htnScore,
+    score: parseFloat(htnScore.toFixed(1)),
     description: 'High blood pressure damages arteries and organs silently. Known as "the silent killer."',
     source: 'AHA Blood Pressure Guidelines 2024, JNC-8',
     factors: htnFactors.length > 0 ? htnFactors : ['No major risk factors detected'],
   });
 
-  // 7. Depression / Mental Health
-  let mentalScore = 0;
-  mentalScore += habits.stress * 18;
-  mentalScore += habits.sleep * 15;
-  mentalScore += habits.exercise * 6;
-  mentalScore += habits.alcohol * 5;
-  if (biomarkers.vitaminD !== null && biomarkers.vitaminD < 20) mentalScore += 10;
-  if (biomarkers.tsh !== null && (biomarkers.tsh > 4 || biomarkers.tsh < 0.4)) mentalScore += 10;
+  // 7. Depression / Mental Health — WHO/NIMH
+  // Mental health risk is less age-dependent, so only partial attenuation
+  const mentalAgeScale = Math.max(0.6, ageScale);
+  const mentalHabit = (habits.stress * 15 + habits.sleep * 12 + habits.exercise * 5 + habits.alcohol * 4) * mentalAgeScale;
+  let mentalScore = mentalHabit;
+  // Biomarker contributions
+  if (biomarkers.vitaminD !== null && biomarkers.vitaminD < 20) mentalScore += 8;
+  if (biomarkers.tsh !== null && (biomarkers.tsh > 4 || biomarkers.tsh < 0.4)) mentalScore += 8;
   mentalScore = Math.min(100, mentalScore);
   const mentalFactors: string[] = [];
   if (habits.stress >= 2) mentalFactors.push('Chronic stress');
@@ -306,22 +320,22 @@ export function calculateDiseaseRisks(
   diseases.push({
     name: 'Depression / Mental Health',
     risk: toRisk(mentalScore),
-    score: mentalScore,
+    score: parseFloat(mentalScore.toFixed(1)),
     description: 'Stress, poor sleep, and sedentary lifestyle are significant modifiable risk factors for depression.',
     source: 'WHO Mental Health Report, NIH NIMH Data',
     factors: mentalFactors.length > 0 ? mentalFactors : ['No major risk factors detected'],
   });
 
-  // 8. Prostate Cancer (male only)
-  if (isMale || demographics.sex === null) {
+  // 8. Prostate Cancer (confirmed male only) — NCI/ACS
+  if (isMale) {
     let prostateScore = 0;
-    prostateScore += Math.max(0, (age - 50) * 0.8);
+    prostateScore += Math.max(0, (age - 50) * 0.7);
     if (biomarkers.psa !== null) {
-      if (biomarkers.psa >= 10) prostateScore += 40;
-      else if (biomarkers.psa >= 4) prostateScore += 20;
-      else if (biomarkers.psa >= 2.5) prostateScore += 8;
+      if (biomarkers.psa >= 10) prostateScore += 35;
+      else if (biomarkers.psa >= 4) prostateScore += 18;
+      else if (biomarkers.psa >= 2.5) prostateScore += 6;
     }
-    if (habits.diet >= 2) prostateScore += 8;
+    if (habits.diet >= 2) prostateScore += 6 * ageScale;
     prostateScore = Math.min(100, prostateScore);
     const prostateFactors: string[] = [];
     if (age >= 50) prostateFactors.push(`Age ${age} (screening recommended 50+)`);
@@ -329,22 +343,22 @@ export function calculateDiseaseRisks(
     diseases.push({
       name: 'Prostate Cancer',
       risk: toRisk(prostateScore),
-      score: prostateScore,
+      score: parseFloat(prostateScore.toFixed(1)),
       description: 'Most common cancer in men. Age and PSA levels are key screening indicators.',
       source: 'NCI, ACS Screening Guidelines, USPSTF',
       factors: prostateFactors.length > 0 ? prostateFactors : ['No major risk factors at this age'],
     });
   }
 
-  // 9. Anemia
+  // 9. Anemia — WHO/ASH
   let anemiaScore = 0;
   if (biomarkers.hemoglobin !== null) {
     const low = isMale ? 13.5 : 12;
     if (biomarkers.hemoglobin < low - 2) anemiaScore += 35;
     else if (biomarkers.hemoglobin < low) anemiaScore += 15;
   }
-  if (biomarkers.ferritin !== null && biomarkers.ferritin < 15) anemiaScore += 25;
-  if (habits.diet >= 2) anemiaScore += 10;
+  if (biomarkers.ferritin !== null && biomarkers.ferritin < 15) anemiaScore += 22;
+  if (habits.diet >= 2) anemiaScore += 8;
   anemiaScore = Math.min(100, anemiaScore);
   const anemiaFactors: string[] = [];
   if (biomarkers.hemoglobin !== null && biomarkers.hemoglobin < (isMale ? 13.5 : 12)) anemiaFactors.push(`Hemoglobin ${biomarkers.hemoglobin}`);
@@ -353,26 +367,26 @@ export function calculateDiseaseRisks(
   diseases.push({
     name: 'Anemia',
     risk: toRisk(anemiaScore),
-    score: anemiaScore,
+    score: parseFloat(anemiaScore.toFixed(1)),
     description: 'Insufficient healthy red blood cells. Often caused by iron deficiency, poor diet, or chronic disease.',
     source: 'WHO Anemia Guidelines, ASH',
     factors: anemiaFactors.length > 0 ? anemiaFactors : ['No indicators detected'],
   });
 
-  // 10. Thyroid Disorder
+  // 10. Thyroid Disorder — ATA
   let thyroidScore = 0;
   if (biomarkers.tsh !== null) {
     if (biomarkers.tsh > 10 || biomarkers.tsh < 0.1) thyroidScore += 35;
     else if (biomarkers.tsh > 4 || biomarkers.tsh < 0.4) thyroidScore += 18;
   }
-  if (habits.stress >= 2) thyroidScore += 8;
+  if (habits.stress >= 2) thyroidScore += 6;
   thyroidScore = Math.min(100, thyroidScore);
   const thyroidFactors: string[] = [];
   if (biomarkers.tsh !== null && (biomarkers.tsh > 4 || biomarkers.tsh < 0.4)) thyroidFactors.push(`TSH ${biomarkers.tsh}`);
   diseases.push({
     name: 'Thyroid Disorder',
     risk: toRisk(thyroidScore),
-    score: thyroidScore,
+    score: parseFloat(thyroidScore.toFixed(1)),
     description: 'Includes hypothyroidism and hyperthyroidism. TSH is the primary screening test.',
     source: 'ATA Guidelines, Endocrine Society',
     factors: thyroidFactors.length > 0 ? thyroidFactors : ['No indicators — consider TSH screening'],

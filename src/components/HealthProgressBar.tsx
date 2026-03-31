@@ -126,9 +126,11 @@ function estimateLifeExpectancy(habits: Habits, demographics: Demographics, biom
     base -= Math.min(12, bioPenalty);
   }
 
-  // Floor: no one's estimated LE should drop below age+10 or 55, whichever is higher.
-  // Even with terrible habits, a 17-year-old still has decades of potential change.
-  const floor = Math.max(55, age + 10);
+  // Floor: LE should not drop below a realistic minimum.
+  // - Young people (< 30): floor at 60 (bad habits are reversible)
+  // - Middle-aged (30-60): floor at 55
+  // - Older (60+): floor at age + 2 (actuarial minimum)
+  const floor = age >= 60 ? age + 2 : age < 30 ? 60 : 55;
   return Math.round(Math.max(floor, Math.min(95, base)));
 }
 

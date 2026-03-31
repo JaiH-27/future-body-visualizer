@@ -182,10 +182,10 @@ export function calculateOrganRisks(habits: Habits, years: TimelineYear, demogra
     (0.3 + timeFactor * 0.7) * ageMod + brainBioBoost
   ));
 
-  // Body fat score
+  // Body fat score (add ageMod — metabolic risk increases with age too)
   const fatScore = r2(Math.min(100,
     (habits.exercise * 22 + habits.diet * 25 + habits.sleep * 8 + habits.stress * 8 + habits.hydration * 4) *
-    (0.3 + timeFactor * 0.7) * bmiMod + fatBioBoost
+    (0.3 + timeFactor * 0.7) * ageMod * bmiMod + fatBioBoost
   ));
 
   // Kidney score
