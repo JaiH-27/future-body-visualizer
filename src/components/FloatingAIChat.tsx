@@ -98,6 +98,10 @@ export default function FloatingAIChat() {
   }, [tabs.length]);
 
   const deleteTab = useCallback((tabId: string) => {
+    const tab = tabs.find(t => t.id === tabId);
+    if (tab && tab.messages.length > 0) {
+      if (!window.confirm(`Delete "${tab.label}" and its ${tab.messages.length} messages?`)) return;
+    }
     setTabs(prev => {
       const filtered = prev.filter(t => t.id !== tabId);
       if (filtered.length === 0) {
@@ -106,6 +110,11 @@ export default function FloatingAIChat() {
         return [fresh];
       }
       if (activeTabId === tabId) {
+        setActiveTabId(filtered[0].id);
+      }
+      return filtered;
+    });
+  }, [activeTabId, tabs]);
         setActiveTabId(filtered[0].id);
       }
       return filtered;
