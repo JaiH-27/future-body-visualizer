@@ -20,7 +20,7 @@ export const Route = createFileRoute('/')({
 });
 
 function DashboardPage() {
-  const { habits, setHabits, demographics, years, risks, resetAll } = useHealthState();
+  const { habits, setHabits, demographics, setDemographics, biomarkers, setBiomarkers, years, risks, resetAll } = useHealthState();
   const [selectedOrgan, setSelectedOrgan] = useState<OrganRisk | null>(null);
   const [hoveredOrgan, setHoveredOrgan] = useState<string | null>(null);
   const [chatMessages, setChatMessages] = useState<{ role: 'user' | 'ai'; text: string }[]>([]);
