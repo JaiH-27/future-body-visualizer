@@ -280,7 +280,7 @@ export default function FloatingAIChat() {
 
       {/* Floating Bar */}
       <div className="fixed bottom-0 left-0 right-0 z-30 pointer-events-none">
-        <div className="max-w-[700px] mx-auto px-4 pb-5 pointer-events-auto">
+        <div ref={chatBarRef} className="max-w-[700px] mx-auto px-4 pb-5 pointer-events-auto">
           <AnimatePresence mode="wait">
             {chatOpen ? (
               <motion.div
