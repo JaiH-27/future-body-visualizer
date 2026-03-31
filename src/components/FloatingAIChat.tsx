@@ -115,11 +115,6 @@ export default function FloatingAIChat() {
       return filtered;
     });
   }, [activeTabId, tabs]);
-        setActiveTabId(filtered[0].id);
-      }
-      return filtered;
-    });
-  }, [activeTabId]);
 
   const handleChat = useCallback(async (message: string) => {
     const updatedMessages = [...chatMessages, { role: 'user' as const, text: message }];
