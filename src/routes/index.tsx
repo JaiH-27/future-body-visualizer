@@ -40,7 +40,7 @@ function DashboardPage() {
       <AppHeader
         onReset={handleReset}
         extraActions={
-          <HealthReportPDF risks={risks} habits={habits} demographics={demographics} years={years} chatMessages={chatMessages} />
+          <HealthReportPDF risks={risks} habits={habits} demographics={demographics} years={years} chatMessages={[]} />
         }
       />
 
