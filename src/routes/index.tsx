@@ -19,7 +19,7 @@ function DashboardPage() {
   const { habits, setHabits, demographics, biomarkers, years, risks, resetAll } = useHealthState();
   const [selectedOrgan, setSelectedOrgan] = useState<OrganRisk | null>(null);
   const [hoveredOrgan, setHoveredOrgan] = useState<string | null>(null);
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  
 
   const handleOrganClick = useCallback((organ: OrganRisk) => {
     setSelectedOrgan(organ);
