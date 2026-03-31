@@ -46,7 +46,8 @@ function DashboardPage() {
   }, [resetAll]);
 
   const handleChat = useCallback(async (message: string) => {
-    setChatMessages(prev => [...prev, { role: 'user', text: message }]);
+    const updatedMessages = [...chatMessages, { role: 'user' as const, text: message }];
+    setChatMessages(updatedMessages);
     setChatLoading(true);
 
     try {
@@ -57,7 +58,13 @@ function DashboardPage() {
           'Authorization': `Bearer ${ANON_KEY}`,
           'apikey': ANON_KEY,
         },
-        body: JSON.stringify({ message, demographics }),
+        body: JSON.stringify({
+          message,
+          demographics,
+          chatHistory: updatedMessages.slice(-10),
+          currentHabits: habits,
+          currentBiomarkers: biomarkers,
+        }),
       });
 
       if (!res.ok) {
@@ -69,6 +76,7 @@ function DashboardPage() {
 
       const data = await res.json();
 
+      // Apply habit updates
       if (data.habits) {
         setHabits({
           smoking: data.habits.smoking as HabitLevel,
@@ -81,21 +89,41 @@ function DashboardPage() {
         });
       }
 
-      let aiText = data.summary || 'Habits analyzed.';
+      // Apply biomarker updates (merge with existing)
+      if (data.biomarkers && typeof data.biomarkers === 'object') {
+        setBiomarkers(prev => ({ ...prev, ...data.biomarkers }));
+      }
+
+      // Apply demographics updates (merge with existing)
+      if (data.demographics && typeof data.demographics === 'object') {
+        setDemographics(prev => ({ ...prev, ...data.demographics }));
+      }
+
+      let aiText = data.summary || 'Health data updated.';
       if (data.sources?.length > 0) {
         aiText += '\n📚 Sources: ' + data.sources.join(' · ');
       }
       if (data.bmi_note) {
         aiText += '\n📊 ' + data.bmi_note;
       }
+
+      // Note what changed
+      const changes: string[] = [];
+      if (data.biomarkers) changes.push('biomarkers');
+      if (data.demographics) changes.push('demographics');
+      if (data.habits) changes.push('habits');
+      if (changes.length > 0) {
+        aiText += `\n✅ Updated: ${changes.join(', ')}`;
+      }
+
       setChatMessages(prev => [...prev, { role: 'ai', text: aiText }]);
     } catch (e) {
       console.error('Chat error:', e);
-      toast.error('Failed to parse habits. Try again.');
+      toast.error('Failed to analyze. Try again.');
     } finally {
       setChatLoading(false);
     }
-  }, [demographics, setHabits]);
+  }, [chatMessages, demographics, habits, biomarkers, setHabits, setBiomarkers, setDemographics]);
 
   const sendMessage = () => {
     if (!chatInput.trim()) return;
