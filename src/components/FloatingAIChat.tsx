@@ -194,7 +194,7 @@ export default function FloatingAIChat() {
     setChatInput('');
   };
 
-  const allMessages = tabs.flatMap(t => t.messages);
+  
 
   return (
     <>
