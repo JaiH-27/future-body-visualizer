@@ -29,7 +29,7 @@ function DashboardPage() {
     resetAll();
     setSelectedOrgan(null);
     setHoveredOrgan(null);
-    setChatMessages([]);
+    
     toast.success('All settings reset.');
   }, [resetAll]);
 
