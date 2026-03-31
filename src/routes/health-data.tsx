@@ -3,6 +3,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, AlertTriangle, CheckCircle2, AlertCircle, Info } from 'lucide-react';
 import AppHeader from '@/components/AppHeader';
+import FloatingAIChat, { type ChatMessage } from '@/components/FloatingAIChat';
 import { useHealthState } from '@/hooks/use-health-state';
 import {
   type BloodBiomarkers,
