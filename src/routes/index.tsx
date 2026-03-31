@@ -6,7 +6,7 @@ import BodyContextPanel from '@/components/BodyContextPanel';
 import HealthProgressBar from '@/components/HealthProgressBar';
 import HealthReportPDF from '@/components/HealthReportPDF';
 import AppHeader from '@/components/AppHeader';
-import FloatingAIChat, { type ChatMessage } from '@/components/FloatingAIChat';
+import FloatingAIChat from '@/components/FloatingAIChat';
 import { useHealthState } from '@/hooks/use-health-state';
 import { toast } from 'sonner';
 import { PRESETS, type OrganRisk } from '@/lib/health-types';
