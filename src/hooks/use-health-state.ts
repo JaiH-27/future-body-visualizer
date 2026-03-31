@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   type Habits,
   type HabitLevel,
@@ -18,6 +18,7 @@ const STORAGE_KEYS = {
 } as const;
 
 function loadJSON<T>(key: string, fallback: T): T {
+  if (typeof window === 'undefined') return fallback;
   try {
     const saved = localStorage.getItem(key);
     return saved ? JSON.parse(saved) : fallback;
@@ -31,10 +32,18 @@ function saveJSON(key: string, value: unknown) {
 }
 
 export function useHealthState() {
-  const [habits, setHabitsState] = useState<Habits>(() => loadJSON(STORAGE_KEYS.habits, DEFAULT_HABITS));
-  const [demographics, setDemographicsState] = useState<Demographics>(() => loadJSON(STORAGE_KEYS.demographics, DEFAULT_DEMOGRAPHICS));
-  const [biomarkers, setBiomarkersState] = useState<BloodBiomarkers>(() => loadJSON(STORAGE_KEYS.biomarkers, DEFAULT_BIOMARKERS));
-  const [years, setYearsState] = useState<TimelineYear>(() => loadJSON(STORAGE_KEYS.timeline, 0 as TimelineYear));
+  const [habits, setHabitsState] = useState<Habits>(DEFAULT_HABITS);
+  const [demographics, setDemographicsState] = useState<Demographics>(DEFAULT_DEMOGRAPHICS);
+  const [biomarkers, setBiomarkersState] = useState<BloodBiomarkers>(DEFAULT_BIOMARKERS);
+  const [years, setYearsState] = useState<TimelineYear>(0 as TimelineYear);
+
+  // Hydrate from localStorage after mount to avoid SSR mismatch
+  useEffect(() => {
+    setHabitsState(loadJSON(STORAGE_KEYS.habits, DEFAULT_HABITS));
+    setDemographicsState(loadJSON(STORAGE_KEYS.demographics, DEFAULT_DEMOGRAPHICS));
+    setBiomarkersState(loadJSON(STORAGE_KEYS.biomarkers, DEFAULT_BIOMARKERS));
+    setYearsState(loadJSON(STORAGE_KEYS.timeline, 0 as TimelineYear));
+  }, []);
 
   const setHabits = useCallback((h: Habits | ((prev: Habits) => Habits)) => {
     setHabitsState(prev => {
