@@ -98,6 +98,10 @@ export default function FloatingAIChat() {
   }, [tabs.length]);
 
   const deleteTab = useCallback((tabId: string) => {
+    const tab = tabs.find(t => t.id === tabId);
+    if (tab && tab.messages.length > 0) {
+      if (!window.confirm(`Delete "${tab.label}" and its ${tab.messages.length} messages?`)) return;
+    }
     setTabs(prev => {
       const filtered = prev.filter(t => t.id !== tabId);
       if (filtered.length === 0) {
@@ -110,7 +114,7 @@ export default function FloatingAIChat() {
       }
       return filtered;
     });
-  }, [activeTabId]);
+  }, [activeTabId, tabs]);
 
   const handleChat = useCallback(async (message: string) => {
     const updatedMessages = [...chatMessages, { role: 'user' as const, text: message }];
