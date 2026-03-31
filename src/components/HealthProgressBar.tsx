@@ -130,6 +130,7 @@ function estimateLifeExpectancy(habits: Habits, demographics: Demographics, biom
   // Even with terrible habits, a 17-year-old still has decades of potential change.
   const floor = Math.max(55, age + 10);
   return Math.round(Math.max(floor, Math.min(95, base)));
+}
 
 export default function HealthProgressBar({ risks, demographics, habits, years, biomarkers }: HealthProgressBarProps) {
   const healthScore = useMemo(() => {
