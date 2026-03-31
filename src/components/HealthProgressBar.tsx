@@ -8,6 +8,7 @@ interface HealthProgressBarProps {
   demographics: Demographics;
   habits: Habits;
   years: TimelineYear;
+  biomarkers?: BloodBiomarkers | null;
 }
 
 function estimateLifeExpectancy(habits: Habits, demographics: Demographics): number {
