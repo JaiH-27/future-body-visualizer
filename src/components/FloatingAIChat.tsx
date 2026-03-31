@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, MessageSquare, X } from 'lucide-react';
+import { Send, MessageSquare, X, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useHealthState } from '@/hooks/use-health-state';
 import type { HabitLevel } from '@/lib/health-types';
@@ -8,23 +8,82 @@ import type { HabitLevel } from '@/lib/health-types';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://tglfrgxkinkoxbocadum.supabase.co';
 const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRnbGZyZ3hraW5rb3hib2NhZHVtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MDg4MjEsImV4cCI6MjA5MDE4NDgyMX0.l6qzeNnFKwKt6D1pj6qQvQ4jmPg6f2lZ9WFFGX6ZJck';
 
+const STORAGE_KEY = 'ai-chat-tabs';
+
 export type ChatMessage = { role: 'user' | 'ai'; text: string };
 
-interface FloatingAIChatProps {
-  chatMessages: ChatMessage[];
-  setChatMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>;
+interface ChatTab {
+  id: string;
+  label: string;
+  messages: ChatMessage[];
 }
 
-export default function FloatingAIChat({ chatMessages, setChatMessages }: FloatingAIChatProps) {
+function loadTabs(): ChatTab[] {
+  if (typeof window === 'undefined') return [{ id: '1', label: 'Chat 1', messages: [] }];
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved) as ChatTab[];
+      if (parsed.length > 0) return parsed;
+    }
+  } catch {}
+  return [{ id: '1', label: 'Chat 1', messages: [] }];
+}
+
+function saveTabs(tabs: ChatTab[]) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(tabs));
+}
+
+export default function FloatingAIChat() {
   const { habits, setHabits, demographics, setDemographics, biomarkers, setBiomarkers } = useHealthState();
   const [chatLoading, setChatLoading] = useState(false);
   const [chatInput, setChatInput] = useState('');
   const [chatOpen, setChatOpen] = useState(false);
+  const [tabs, setTabs] = useState<ChatTab[]>(() => loadTabs());
+  const [activeTabId, setActiveTabId] = useState<string>(() => loadTabs()[0]?.id || '1');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const activeTab = tabs.find(t => t.id === activeTabId) || tabs[0];
+  const chatMessages = activeTab?.messages || [];
+
+  // Persist tabs whenever they change
+  useEffect(() => {
+    saveTabs(tabs);
+  }, [tabs]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatMessages, chatLoading]);
+
+  const setChatMessages = useCallback((updater: ChatMessage[] | ((prev: ChatMessage[]) => ChatMessage[])) => {
+    setTabs(prev => prev.map(t => {
+      if (t.id !== activeTabId) return t;
+      const newMsgs = typeof updater === 'function' ? updater(t.messages) : updater;
+      return { ...t, messages: newMsgs };
+    }));
+  }, [activeTabId]);
+
+  const addNewTab = useCallback(() => {
+    const newId = Date.now().toString();
+    const newTab: ChatTab = { id: newId, label: `Chat ${tabs.length + 1}`, messages: [] };
+    setTabs(prev => [...prev, newTab]);
+    setActiveTabId(newId);
+  }, [tabs.length]);
+
+  const deleteTab = useCallback((tabId: string) => {
+    setTabs(prev => {
+      const filtered = prev.filter(t => t.id !== tabId);
+      if (filtered.length === 0) {
+        const fresh = { id: Date.now().toString(), label: 'Chat 1', messages: [] };
+        setActiveTabId(fresh.id);
+        return [fresh];
+      }
+      if (activeTabId === tabId) {
+        setActiveTabId(filtered[0].id);
+      }
+      return filtered;
+    });
+  }, [activeTabId]);
 
   const handleChat = useCallback(async (message: string) => {
     const updatedMessages = [...chatMessages, { role: 'user' as const, text: message }];
@@ -108,29 +167,70 @@ export default function FloatingAIChat({ chatMessages, setChatMessages }: Floati
     setChatInput('');
   };
 
+  const allMessages = tabs.flatMap(t => t.messages);
+
   return (
     <>
       {/* Chat Log */}
-      {chatMessages.length > 0 && (
+      {allMessages.length > 0 && (
         <section className="rounded-xl border border-border bg-card overflow-hidden">
           <div className="px-5 py-3 border-b border-border">
             <h2 className="text-sm font-semibold text-foreground">AI Analysis Log</h2>
             <p className="text-xs text-muted-foreground mt-0.5">Chat history and health insights from the AI</p>
           </div>
-          <div className="p-5 space-y-3 max-h-[400px] overflow-y-auto">
-            {chatMessages.map((msg, i) => (
-              <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[80%] rounded-xl px-4 py-2.5 text-sm leading-relaxed ${
-                  msg.role === 'user'
+
+          {/* Tab bar */}
+          <div className="flex items-center gap-1 px-3 pt-3 pb-1 overflow-x-auto">
+            {tabs.map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTabId(tab.id)}
+                className={`group flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors shrink-0 ${
+                  tab.id === activeTabId
                     ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted text-foreground'
-                }`}>
-                  {msg.text.split('\n').map((line, j) => (
-                    <span key={j}>{line}{j < msg.text.split('\n').length - 1 && <br />}</span>
-                  ))}
-                </div>
-              </div>
+                    : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                }`}
+              >
+                <span>{tab.label}</span>
+                {tabs.length > 1 && (
+                  <span
+                    onClick={(e) => { e.stopPropagation(); deleteTab(tab.id); }}
+                    className={`opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer ${
+                      tab.id === activeTabId ? 'text-primary-foreground/70 hover:text-primary-foreground' : 'text-muted-foreground/70 hover:text-foreground'
+                    }`}
+                  >
+                    <X className="w-3 h-3" />
+                  </span>
+                )}
+              </button>
             ))}
+            <button
+              onClick={addNewTab}
+              className="shrink-0 h-7 w-7 rounded-lg bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground flex items-center justify-center transition-colors"
+              title="New chat"
+            >
+              <Plus className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <div className="p-5 space-y-3 max-h-[400px] overflow-y-auto">
+            {chatMessages.length === 0 ? (
+              <p className="text-xs text-muted-foreground/60 text-center py-4">No messages in this chat yet.</p>
+            ) : (
+              chatMessages.map((msg, i) => (
+                <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[80%] rounded-xl px-4 py-2.5 text-sm leading-relaxed ${
+                    msg.role === 'user'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-foreground'
+                  }`}>
+                    {msg.text.split('\n').map((line, j) => (
+                      <span key={j}>{line}{j < msg.text.split('\n').length - 1 && <br />}</span>
+                    ))}
+                  </div>
+                </div>
+              ))
+            )}
             {chatLoading && (
               <div className="flex justify-start">
                 <div className="bg-muted text-foreground rounded-xl px-4 py-2.5 text-sm animate-pulse">✦ Analyzing...</div>
