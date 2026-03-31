@@ -40,98 +40,96 @@ function estimateLifeExpectancy(habits: Habits, demographics: Demographics, biom
   }
 
   // === Habit impacts (level 0=none, 1=moderate, 2=severe) ===
+  // Collect all penalty years, then apply diminishing returns
+  // (risks overlap — smoking + poor diet aren't fully additive)
+  let totalHabitPenalty = 0;
 
   // Smoking: CDC MMWR 2014 — daily smoking reduces LE by ~10 years
-  // Occasional (level 1) ≈ 3-5 years
-  const smokingImpact = [0, -4, -10];
-  base += smokingImpact[habits.smoking];
+  totalHabitPenalty += [0, 4, 10][habits.smoking];
 
   // Alcohol: WHO Global Status Report — heavy drinking reduces LE by 5-7 years
-  const alcoholImpact = [0, -1.5, -5];
-  base += alcoholImpact[habits.alcohol];
+  totalHabitPenalty += [0, 1.5, 5][habits.alcohol];
 
   // Sleep: NIH/Walker (2017) — chronic <6h linked to 3-5 year reduction
-  const sleepImpact = [0, -1.5, -4];
-  base += sleepImpact[habits.sleep];
+  totalHabitPenalty += [0, 1.5, 4][habits.sleep];
 
   // Exercise: AHA — sedentary lifestyle reduces LE by 3-5 years
-  // Regular exercise adds 3-4 years (already in baseline for level 0)
-  const exerciseImpact = [0, -2, -4.5];
-  base += exerciseImpact[habits.exercise];
+  totalHabitPenalty += [0, 2, 4.5][habits.exercise];
 
-  // Diet: Lancet GBD 2017 — poor diet is the #1 mortality risk factor (~4 year reduction)
-  const dietImpact = [0, -1.5, -4];
-  base += dietImpact[habits.diet];
+  // Diet: Lancet GBD 2017 — poor diet ~4 year reduction
+  totalHabitPenalty += [0, 1.5, 4][habits.diet];
 
-  // Stress: APA/Lancet — chronic unmanaged stress linked to 2-3 year reduction
-  const stressImpact = [0, -1, -2.5];
-  base += stressImpact[habits.stress];
+  // Stress: APA/Lancet — chronic stress ~2-3 year reduction
+  totalHabitPenalty += [0, 1, 2.5][habits.stress];
 
-  // Hydration: Emerging research (NIH 2023) — chronic dehydration linked to
-  // accelerated biological aging; ~1-2 year estimated impact
-  const hydrationImpact = [0, -0.5, -1.5];
-  base += hydrationImpact[habits.hydration];
+  // Hydration: NIH 2023 — ~1-2 year impact
+  totalHabitPenalty += [0, 0.5, 1.5][habits.hydration];
+
+  // Diminishing returns: first 10 years of penalty apply fully,
+  // beyond that each additional year only counts ~50%.
+  // This models overlapping risk pathways (e.g., smoking + poor diet
+  // both affect CVD — they don't stack independently).
+  let effectivePenalty: number;
+  if (totalHabitPenalty <= 10) {
+    effectivePenalty = totalHabitPenalty;
+  } else {
+    effectivePenalty = 10 + (totalHabitPenalty - 10) * 0.5;
+  }
+
+  // Cap maximum habit-based reduction at 20 years
+  effectivePenalty = Math.min(20, effectivePenalty);
+  base -= effectivePenalty;
 
   // === BMI impact (WHO/Lancet) ===
   if (demographics.height && demographics.weight) {
     const bmi = demographics.weight / ((demographics.height / 100) ** 2);
-    if (bmi >= 40) base -= 8;       // Class III obesity: 8-14 years (Lancet 2016)
-    else if (bmi >= 35) base -= 5;  // Class II obesity: 5-8 years
-    else if (bmi >= 30) base -= 3;  // Class I obesity: 3-5 years
-    else if (bmi >= 25) base -= 1;  // Overweight: ~1 year
-    else if (bmi < 18.5) base -= 2; // Underweight: ~2 years
+    if (bmi >= 40) base -= 8;
+    else if (bmi >= 35) base -= 5;
+    else if (bmi >= 30) base -= 3;
+    else if (bmi >= 25) base -= 1;
+    else if (bmi < 18.5) base -= 2;
   }
 
   // === Biomarker impacts ===
+  let bioPenalty = 0;
   if (biomarkers) {
-    // Hypertension: Lancet 2010 — Stage 2 HTN reduces LE by ~5 years
     if (biomarkers.systolic !== null) {
-      if (biomarkers.systolic >= 160) base -= 5;
-      else if (biomarkers.systolic >= 140) base -= 3;
-      else if (biomarkers.systolic >= 130) base -= 1;
+      if (biomarkers.systolic >= 160) bioPenalty += 5;
+      else if (biomarkers.systolic >= 140) bioPenalty += 3;
+      else if (biomarkers.systolic >= 130) bioPenalty += 1;
     }
-
-    // High LDL: AHA — strongly elevated LDL (≥190) linked to 2-4 year reduction
     if (biomarkers.ldl !== null) {
-      if (biomarkers.ldl >= 190) base -= 3;
-      else if (biomarkers.ldl >= 160) base -= 1.5;
+      if (biomarkers.ldl >= 190) bioPenalty += 3;
+      else if (biomarkers.ldl >= 160) bioPenalty += 1.5;
     }
-
-    // Low HDL: AHA — HDL <40 is an independent CVD risk factor
-    if (biomarkers.hdl !== null && biomarkers.hdl < 40) base -= 1.5;
-
-    // Diabetes (HbA1c): ADA — Type 2 diabetes reduces LE by ~6 years
+    if (biomarkers.hdl !== null && biomarkers.hdl < 40) bioPenalty += 1.5;
     if (biomarkers.hba1c !== null) {
-      if (biomarkers.hba1c >= 8) base -= 6;
-      else if (biomarkers.hba1c >= 6.5) base -= 3;
-      else if (biomarkers.hba1c >= 5.7) base -= 1; // prediabetes
+      if (biomarkers.hba1c >= 8) bioPenalty += 6;
+      else if (biomarkers.hba1c >= 6.5) bioPenalty += 3;
+      else if (biomarkers.hba1c >= 5.7) bioPenalty += 1;
     }
-
-    // Kidney disease (eGFR): KDIGO — CKD stage 3+ reduces LE by 5-10 years
     if (biomarkers.egfr !== null) {
-      if (biomarkers.egfr < 30) base -= 8;
-      else if (biomarkers.egfr < 60) base -= 4;
-      else if (biomarkers.egfr < 90) base -= 1;
+      if (biomarkers.egfr < 30) bioPenalty += 8;
+      else if (biomarkers.egfr < 60) bioPenalty += 4;
+      else if (biomarkers.egfr < 90) bioPenalty += 1;
     }
-
-    // Chronic inflammation (CRP): AHA — high CRP is a CVD risk multiplier
-    if (biomarkers.crp !== null && biomarkers.crp >= 3) base -= 1.5;
-
-    // Very high triglycerides: pancreatitis & CVD risk
-    if (biomarkers.triglycerides !== null && biomarkers.triglycerides >= 500) base -= 2;
-    else if (biomarkers.triglycerides !== null && biomarkers.triglycerides >= 200) base -= 1;
-
-    // Severe anemia
+    if (biomarkers.crp !== null && biomarkers.crp >= 3) bioPenalty += 1.5;
+    if (biomarkers.triglycerides !== null && biomarkers.triglycerides >= 500) bioPenalty += 2;
+    else if (biomarkers.triglycerides !== null && biomarkers.triglycerides >= 200) bioPenalty += 1;
     if (biomarkers.hemoglobin !== null) {
       const low = demographics.sex === 'male' ? 13.5 : 12;
-      if (biomarkers.hemoglobin < low - 3) base -= 2;
-      else if (biomarkers.hemoglobin < low) base -= 0.5;
+      if (biomarkers.hemoglobin < low - 3) bioPenalty += 2;
+      else if (biomarkers.hemoglobin < low) bioPenalty += 0.5;
     }
+
+    // Biomarker penalties also get diminishing returns (cap at 12)
+    base -= Math.min(12, bioPenalty);
   }
 
-  // Clamp to reasonable range
-  return Math.round(Math.max(Math.max(age + 1, 40), Math.min(95, base)));
-}
+  // Floor: no one's estimated LE should drop below age+10 or 55, whichever is higher.
+  // Even with terrible habits, a 17-year-old still has decades of potential change.
+  const floor = Math.max(55, age + 10);
+  return Math.round(Math.max(floor, Math.min(95, base)));
 
 export default function HealthProgressBar({ risks, demographics, habits, years, biomarkers }: HealthProgressBarProps) {
   const healthScore = useMemo(() => {
