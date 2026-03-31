@@ -139,7 +139,7 @@ export default function HealthProgressBar({ risks, demographics, habits, years, 
     return Math.round(100 - avgRisk);
   }, [risks]);
 
-  const lifeExpectancy = useMemo(() => estimateLifeExpectancy(habits, demographics), [habits, demographics]);
+  const lifeExpectancy = useMemo(() => estimateLifeExpectancy(habits, demographics, biomarkers), [habits, demographics, biomarkers]);
   const currentAge = demographics.age ?? 25;
   const projectedAge = currentAge + years;
 
