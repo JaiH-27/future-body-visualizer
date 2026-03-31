@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import type { OrganRisk, Habits, Demographics, TimelineYear } from '@/lib/health-types';
+import type { BloodBiomarkers } from '@/lib/biomarker-types';
 
 interface HealthProgressBarProps {
   risks: OrganRisk[];
