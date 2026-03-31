@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, MessageSquare, X, Plus, Trash2 } from 'lucide-react';
+import { Send, MessageSquare, X, Plus, ChevronUp, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { useHealthState } from '@/hooks/use-health-state';
 import type { HabitLevel } from '@/lib/health-types';
