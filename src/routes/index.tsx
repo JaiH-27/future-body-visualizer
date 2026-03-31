@@ -6,7 +6,7 @@ import BodyContextPanel from '@/components/BodyContextPanel';
 import HealthProgressBar from '@/components/HealthProgressBar';
 import HealthReportPDF from '@/components/HealthReportPDF';
 import AppHeader from '@/components/AppHeader';
-import FloatingAIChat, { type ChatMessage } from '@/components/FloatingAIChat';
+import FloatingAIChat from '@/components/FloatingAIChat';
 import { useHealthState } from '@/hooks/use-health-state';
 import { toast } from 'sonner';
 import { PRESETS, type OrganRisk } from '@/lib/health-types';
@@ -19,7 +19,7 @@ function DashboardPage() {
   const { habits, setHabits, demographics, biomarkers, years, risks, resetAll } = useHealthState();
   const [selectedOrgan, setSelectedOrgan] = useState<OrganRisk | null>(null);
   const [hoveredOrgan, setHoveredOrgan] = useState<string | null>(null);
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  
 
   const handleOrganClick = useCallback((organ: OrganRisk) => {
     setSelectedOrgan(organ);
@@ -29,7 +29,7 @@ function DashboardPage() {
     resetAll();
     setSelectedOrgan(null);
     setHoveredOrgan(null);
-    setChatMessages([]);
+    
     toast.success('All settings reset.');
   }, [resetAll]);
 
@@ -40,7 +40,7 @@ function DashboardPage() {
       <AppHeader
         onReset={handleReset}
         extraActions={
-          <HealthReportPDF risks={risks} habits={habits} demographics={demographics} years={years} chatMessages={chatMessages} />
+          <HealthReportPDF risks={risks} habits={habits} demographics={demographics} years={years} chatMessages={[]} />
         }
       />
 
@@ -146,7 +146,7 @@ function DashboardPage() {
           </div>
 
           {/* AI Chat Log + Floating Bar */}
-          <FloatingAIChat chatMessages={chatMessages} setChatMessages={setChatMessages} />
+          <FloatingAIChat />
 
           <p className="text-[10px] text-muted-foreground/50 text-center px-2">
             ⚕️ Educational tool only. References WHO, CDC, AHA & NIH guidelines. Not medical advice.
