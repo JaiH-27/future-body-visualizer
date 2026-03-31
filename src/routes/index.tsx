@@ -47,7 +47,7 @@ function DashboardPage() {
       <main className="px-4 sm:px-6 lg:px-8 py-5">
         <div className="max-w-[1440px] mx-auto space-y-5">
 
-          <HealthProgressBar risks={risks} demographics={demographics} habits={habits} years={years} />
+          <HealthProgressBar risks={risks} demographics={demographics} habits={habits} years={years} biomarkers={biomarkers} />
           <KPIStrip risks={risks} onOrganHover={setHoveredOrgan} hoveredOrgan={hoveredOrgan} />
 
           {/* Quick Presets */}
