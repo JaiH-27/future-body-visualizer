@@ -128,7 +128,7 @@ function DiseaseCard({ disease, index }: { disease: DiseaseRisk; index: number }
 
 function HealthDataPage() {
   const { biomarkers, setBiomarkers, habits, demographics, setDemographics } = useHealthState();
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  
 
   const updateDemo = (field: keyof typeof demographics, value: string) => {
     if (field === 'sex') {
