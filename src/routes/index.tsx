@@ -146,7 +146,7 @@ function DashboardPage() {
           </div>
 
           {/* AI Chat Log + Floating Bar */}
-          <FloatingAIChat chatMessages={chatMessages} setChatMessages={setChatMessages} />
+          <FloatingAIChat />
 
           <p className="text-[10px] text-muted-foreground/50 text-center px-2">
             ⚕️ Educational tool only. References WHO, CDC, AHA & NIH guidelines. Not medical advice.

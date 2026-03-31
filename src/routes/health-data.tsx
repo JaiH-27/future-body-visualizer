@@ -416,7 +416,7 @@ function HealthDataPage() {
           </div>
 
           {/* AI Chat — updates biomarkers, habits, demographics and disease risks in real time */}
-          <FloatingAIChat chatMessages={chatMessages} setChatMessages={setChatMessages} />
+          <FloatingAIChat />
         </div>
       </main>
     </div>
