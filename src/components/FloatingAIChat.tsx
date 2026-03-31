@@ -58,6 +58,30 @@ export default function FloatingAIChat() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatMessages, chatLoading]);
 
+  // Click outside to close chat bar
+  useEffect(() => {
+    if (!chatOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (chatBarRef.current && !chatBarRef.current.contains(e.target as Node)) {
+        setChatOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [chatOpen]);
+
+  // Click outside to close log
+  useEffect(() => {
+    if (!logOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (logRef.current && !logRef.current.contains(e.target as Node)) {
+        setLogOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [logOpen]);
+
   const setChatMessages = useCallback((updater: ChatMessage[] | ((prev: ChatMessage[]) => ChatMessage[])) => {
     setTabs(prev => prev.map(t => {
       if (t.id !== activeTabId) return t;
