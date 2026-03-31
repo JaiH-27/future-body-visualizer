@@ -16,16 +16,21 @@ interface AppHeaderProps {
 
 export default function AppHeader({ onReset, extraActions }: AppHeaderProps) {
   const location = useLocation();
-  const [dark, setDark] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return localStorage.getItem('theme') === 'dark' || 
-      (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  });
+  const [dark, setDark] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+    const isDark = localStorage.getItem('theme') === 'dark' ||
+      (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    setDark(isDark);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
     document.documentElement.classList.toggle('dark', dark);
     localStorage.setItem('theme', dark ? 'dark' : 'light');
-  }, [dark]);
+  }, [dark, mounted]);
 
   return (
     <header className="border-b border-border px-4 py-2 sm:px-6 lg:px-8 bg-card sticky top-0 z-20">

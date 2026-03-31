@@ -3,6 +3,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, AlertTriangle, CheckCircle2, AlertCircle, Info } from 'lucide-react';
 import AppHeader from '@/components/AppHeader';
+import FloatingAIChat, { type ChatMessage } from '@/components/FloatingAIChat';
 import { useHealthState } from '@/hooks/use-health-state';
 import {
   type BloodBiomarkers,
@@ -127,6 +128,7 @@ function DiseaseCard({ disease, index }: { disease: DiseaseRisk; index: number }
 
 function HealthDataPage() {
   const { biomarkers, setBiomarkers, habits, demographics, setDemographics } = useHealthState();
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
 
   const updateDemo = (field: keyof typeof demographics, value: string) => {
     if (field === 'sex') {
@@ -412,6 +414,9 @@ function HealthDataPage() {
               </div>
             </div>
           </div>
+
+          {/* AI Chat — updates biomarkers, habits, demographics and disease risks in real time */}
+          <FloatingAIChat chatMessages={chatMessages} setChatMessages={setChatMessages} />
         </div>
       </main>
     </div>
