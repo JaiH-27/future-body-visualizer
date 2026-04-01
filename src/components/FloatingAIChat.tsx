@@ -183,7 +183,7 @@ export default function FloatingAIChat() {
   return (
     <>
       {/* Chat Log Toggle */}
-      {tabs.some(t => t.messages.length > 0) && (
+      {mounted && tabs.some(t => t.messages.length > 0) && (
         <section ref={logRef} className="rounded-xl border border-border bg-card overflow-hidden">
           <button
             onClick={() => setLogOpen(o => !o)}
