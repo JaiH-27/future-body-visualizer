@@ -58,41 +58,9 @@ export default function FloatingAIChat() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatMessages, chatLoading]);
 
-  // Click outside to close chat bar (use setTimeout to avoid same-click closure)
-  useEffect(() => {
-    if (!chatOpen) return;
-    let armed = false;
-    const armTimeout = setTimeout(() => { armed = true; }, 0);
-    const handler = (e: MouseEvent) => {
-      if (!armed) return;
-      if (chatBarRef.current && !chatBarRef.current.contains(e.target as Node)) {
-        setChatOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => {
-      clearTimeout(armTimeout);
-      document.removeEventListener('mousedown', handler);
-    };
-  }, [chatOpen]);
-
-  // Click outside to close log (use setTimeout to avoid same-click closure)
-  useEffect(() => {
-    if (!logOpen) return;
-    let armed = false;
-    const armTimeout = setTimeout(() => { armed = true; }, 0);
-    const handler = (e: MouseEvent) => {
-      if (!armed) return;
-      if (logRef.current && !logRef.current.contains(e.target as Node)) {
-        setLogOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => {
-      clearTimeout(armTimeout);
-      document.removeEventListener('mousedown', handler);
-    };
-  }, [logOpen]);
+  // Hydration-safe: only show log after mount
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   const setChatMessages = useCallback((updater: ChatMessage[] | ((prev: ChatMessage[]) => ChatMessage[])) => {
     setTabs(prev => prev.map(t => {
